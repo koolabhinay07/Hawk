@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #F7F8F3;
+  --color-foreground: #17231D;
+  --color-card: #FFFFFF;
+  --color-border: #DDE4DC;
+  --color-muted: #ECEFE9;
+  --color-muted-foreground: #58665D;
+  --color-primary: #245D42;
+  --color-primary-foreground: #FFFFFF;
+  --color-primary-container: #D7F08B;
+  --color-on-primary-container: #1D432E;
+  --color-primary-soft: #EEF5E5;
+  --color-icon-accent: #245D42;
+  --color-status-soft: #E7F2D0;
+  --color-status-foreground: #245D42;
+  --color-accent: #FCE8D5;
+  --color-accent-foreground: #7D3F13;
+  --color-secondary: #EEE8F8;
+  --color-secondary-foreground: #594477;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #17231D;
+  --color-ring: #245D42;
+  --color-selection-background: #DDEFA7;
+  --color-scrollbar: #A6B58A;
+}
+
+:root[data-appearance="dark"] {
+  --color-background: #111A14;
+  --color-foreground: #E5EAE4;
+  --color-card: #1A271F;
+  --color-border: #344238;
+  --color-muted: #26332B;
+  --color-muted-foreground: #B4C0B7;
+  --color-primary: #B9E2C5;
+  --color-primary-foreground: #173B29;
+  --color-primary-container: #39563C;
+  --color-on-primary-container: #D9F0A8;
+  --color-primary-soft: #263522;
+  --color-icon-accent: #BFE879;
+  --color-status-soft: #354C2D;
+  --color-status-foreground: #D9F2A9;
+  --color-accent: #493921;
+  --color-accent-foreground: #F4D9A8;
+  --color-secondary: #342D49;
+  --color-secondary-foreground: #D4C5FF;
+  --color-popover: #1A271F;
+  --color-popover-foreground: #E5EAE4;
+  --color-ring: #B9E2C5;
+  --color-selection-background: #405529;
+  --color-scrollbar: #667B65;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html { min-width: 320px; background: var(--color-background); color-scheme: light; }
+  :root[data-appearance="dark"] { color-scheme: dark; }
+  body { font-family: "Maitree", "Segoe UI", system-ui, sans-serif; margin: 0; min-height: 100vh; background: var(--color-background); color: var(--color-foreground); }
+  h1, h2, h3, h4, h5, h6 { font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif; }
+  button, input { font: inherit; }
+  button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, input:focus-visible {
+    outline: 3px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  input::placeholder { color: var(--color-muted-foreground); opacity: 1; }
+  ::selection { color: var(--color-foreground); background: var(--color-selection-background); }
+  * { scrollbar-color: var(--color-scrollbar) transparent; scrollbar-width: thin; }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
