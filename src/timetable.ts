@@ -38,9 +38,9 @@ export function getPeriodState(
   scheduleMinute: number,
   attendance?: AttendanceRecord,
 ): PeriodState {
+  if (scheduleMinute >= period.endMinute) return attendance ? "done" : "missed";
   if (scheduleMinute < period.startMinute) return "upcoming";
-  if (scheduleMinute < period.endMinute) return "running";
-  return attendance ? "done" : "missed";
+  return "running";
 }
 
 export function hasAttendanceRights(period: TimetablePeriod, proxyRights: boolean) {

@@ -17,6 +17,10 @@
   --color-status-foreground: #245D42;
   --color-accent: #FCE8D5;
   --color-accent-foreground: #7D3F13;
+  --color-error: #BA1A1A;
+  --color-on-error: #FFFFFF;
+  --color-error-container: #FFDAD6;
+  --color-on-error-container: #93000A;
   --color-secondary: #EEE8F8;
   --color-secondary-foreground: #594477;
   --color-popover: #FFFFFF;
@@ -43,6 +47,10 @@
   --color-status-foreground: #D9F2A9;
   --color-accent: #493921;
   --color-accent-foreground: #F4D9A8;
+  --color-error: #FFB4AB;
+  --color-on-error: #690005;
+  --color-error-container: #93000A;
+  --color-on-error-container: #FFDAD6;
   --color-secondary: #342D49;
   --color-secondary-foreground: #D4C5FF;
   --color-popover: #1A271F;
@@ -56,7 +64,7 @@
   * { border-color: var(--color-border); }
   html { min-width: 320px; background: var(--color-background); color-scheme: light; }
   :root[data-appearance="dark"] { color-scheme: dark; }
-  body { font-family: "Maitree", "Segoe UI", system-ui, sans-serif; margin: 0; min-height: 100vh; background: var(--color-background); color: var(--color-foreground); }
+  body { font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif; margin: 0; min-height: 100vh; background: var(--color-background); color: var(--color-foreground); }
   h1, h2, h3, h4, h5, h6 { font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif; }
   button, input { font: inherit; }
   button { cursor: pointer; -webkit-tap-highlight-color: transparent; }

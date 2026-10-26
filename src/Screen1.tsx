@@ -9,6 +9,7 @@ import {
   FileText,
   GraduationCap,
   House,
+  LogOut,
   Megaphone,
   Mic,
   Moon,
@@ -36,6 +37,26 @@ const navItems = [
   { icon: User, label: "Profile" },
 ];
 
+function formatScheduleTime(minute: number) {
+  const hour24 = Math.floor(minute / 60);
+  const hour12 = hour24 % 12 || 12;
+  const minuteText = String(minute % 60).padStart(2, "0");
+  return `${hour12}:${minuteText} ${hour24 < 12 ? "AM" : "PM"}`;
+}
+
+function MetaText({ value, className }: { value: string; className: string }) {
+  return (
+    <span className={className}>
+      {value.split(" · ").map((part, index) => (
+        <span key={`${part}-${index}`}>
+          {index > 0 && <span aria-hidden="true" className="mx-1.5 inline-block size-1 rounded-full bg-current align-middle" />}
+          {part}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function loadAttendanceRecords(): Record<string, AttendanceRecord> {
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem("hawk-attendance-records") ?? "{}");
@@ -52,10 +73,10 @@ function loadAttendanceRecords(): Record<string, AttendanceRecord> {
   }
 }
 
-export default function Screen1() {
+export default function Screen1({ onLogout }: { onLogout: () => void }) {
   const [aiOpen, setAiOpen] = useState(false);
   const [showAiHint, setShowAiHint] = useState(true);
-  const [aiOverContent, setAiOverContent] = useState(false);
+  const [aiAtHomeEnd, setAiAtHomeEnd] = useState(false);
   const [activeNav, setActiveNav] = useState("Home");
   const [isDarkMode, setIsDarkMode] = useState(() => {
     try {
@@ -77,8 +98,19 @@ export default function Screen1() {
   const [attendancePresent, setAttendancePresent] = useState("");
   const [clock, setClock] = useState(() => new Date());
   const scheduleMinute = getScheduleMinute(clock);
+  const pendingAttendancePeriods = timetable.filter((period) => period.isOwnClass && !attendanceRecords[period.period]);
+  const pendingAttendancePeriod = pendingAttendancePeriods[0];
+  const attendanceDeadlineMinute = pendingAttendancePeriod ? pendingAttendancePeriod.endMinute + 20 : undefined;
+  const attendanceDeadlineLabel = attendanceDeadlineMinute === undefined
+    ? "Complete"
+    : `Due by ${formatScheduleTime(attendanceDeadlineMinute)}`;
+  const dashboardDate = new Intl.DateTimeFormat("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Asia/Kolkata",
+  }).format(clock);
   const mainContentRef = useRef<HTMLElement>(null);
-  const aiDockRef = useRef<HTMLDivElement>(null);
   const attendanceDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -93,26 +125,20 @@ export default function Screen1() {
 
   useEffect(() => {
     let frame = 0;
-    const updateOverlap = () => {
+    const updateHomeEnd = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        const contentRects = Array.from(mainContentRef.current?.querySelectorAll<HTMLElement>("[data-ai-obstacle]") ?? []).map((child) => child.getBoundingClientRect());
-        const aiDockRect = aiDockRef.current?.getBoundingClientRect();
-        const overlaps = Boolean(aiDockRect && contentRects.some((contentRect) =>
-          contentRect.left < aiDockRect.right && contentRect.right > aiDockRect.left &&
-          contentRect.top < aiDockRect.bottom && contentRect.bottom > aiDockRect.top,
-        ));
-        setAiOverContent(overlaps);
+        setAiAtHomeEnd(Boolean(activeNav === "Home" && mainContentRef.current && mainContentRef.current.getBoundingClientRect().bottom <= window.innerHeight + 16));
       });
     };
 
-    window.addEventListener("scroll", updateOverlap, { capture: true, passive: true });
-    window.addEventListener("resize", updateOverlap);
-    updateOverlap();
+    window.addEventListener("scroll", updateHomeEnd, { capture: true, passive: true });
+    window.addEventListener("resize", updateHomeEnd);
+    updateHomeEnd();
     return () => {
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", updateOverlap, true);
-      window.removeEventListener("resize", updateOverlap);
+      window.removeEventListener("scroll", updateHomeEnd, true);
+      window.removeEventListener("resize", updateHomeEnd);
     };
   }, [activeNav]);
 
@@ -157,12 +183,12 @@ export default function Screen1() {
           <div className="grow">
             <header className="fixed inset-x-0 top-0 z-40 mx-auto flex h-[76px] w-full max-w-[1440px] items-center justify-between border-b bg-background px-4 md:px-8">
               <div className="flex items-center gap-3">
-                <div className="font-bold rounded-2xl bg-primary text-primary-foreground text-sm flex justify-center items-center size-10">
+                <div className="text-base font-semibold rounded-2xl bg-primary-container text-on-primary-container flex justify-center items-center size-10">
                   PS
                 </div>
                 <div>
                   <div className="font-semibold text-base">Namaste, Priya Sharma</div>
-                  <div className="text-muted-foreground text-xs">
+                  <div className="text-muted-foreground text-sm">
                     Delhi Public School, Madhubani
                   </div>
                 </div>
@@ -184,7 +210,7 @@ export default function Screen1() {
                   type="button"
                   aria-current={activeNav === label ? "page" : undefined}
                   onClick={() => setActiveNav(label)}
-                  className={`flex min-h-[68px] w-[68px] flex-col items-center justify-center gap-1.5 rounded-[20px] text-[11px] font-semibold transition-colors ${activeNav === label ? "bg-primary-container text-on-primary-container" : "text-muted-foreground hover:bg-muted"}`}
+                  className={`flex min-h-[68px] w-[76px] flex-col items-center justify-center gap-1.5 whitespace-nowrap rounded-[20px] text-sm font-normal transition-colors ${activeNav === label ? "bg-primary-soft text-icon-accent" : "text-muted-foreground hover:bg-muted"}`}
                 >
                   <Icon aria-hidden="true" className="size-6" />
                   {label}
@@ -194,10 +220,10 @@ export default function Screen1() {
 
             <div className="grow pt-[76px] md:pl-20">
             {activeNav === "Home" ? (
-              <main ref={mainContentRef} className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-4 pb-40 pt-7 md:gap-9 md:px-8 md:pb-12 md:pt-10">
+              <main ref={mainContentRef} className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-4 pb-44 pt-7 md:gap-9 md:px-8 md:pb-12 md:pt-10">
               <section data-ai-obstacle className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                <h1 className="font-bold text-[28px] leading-tight tracking-[-0.025em] md:text-4xl">Monday, 26 October</h1>
-                <p className="text-muted-foreground text-sm md:pb-1">5 classes today · 2 attendance pending</p>
+                <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{dashboardDate}</h1>
+                <MetaText className="text-muted-foreground text-sm md:pb-1" value={`${timetable.length} classes today · ${pendingAttendancePeriods.length} attendance pending`} />
               </section>
 
               <div className="grid gap-7 md:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.9fr)] md:gap-8">
@@ -206,29 +232,32 @@ export default function Screen1() {
               <section data-ai-obstacle className="rounded-[28px] bg-primary-container p-5 text-on-primary-container md:p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-xs font-bold tracking-[0.04em] text-on-primary-container/80">
+                    <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
                       <Clock className="size-3.5" />
-                      ATTENDANCE PENDING
+                      Attendance Pending
                     </div>
-                    <h2 className="mt-2 text-lg font-bold tracking-tight">Class 8-B</h2>
-                    <p className="text-sm text-on-primary-container/80">42 students · Your class</p>
+                    <h2 className="mt-2 text-base font-semibold tracking-tight">{pendingAttendancePeriod?.details.split(" · ")[0] ?? "Attendance complete"}</h2>
+                    <MetaText className="text-sm text-on-primary-container/80" value={pendingAttendancePeriod ? `${pendingAttendancePeriod.students ?? 0} students · Your class` : "You're all caught up"} />
                   </div>
-                  <span className="rounded-full bg-card/75 px-3 py-1.5 text-xs font-semibold text-status-foreground">Due by 9:00 AM</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
+                    {attendanceDeadlineLabel}
+                  </span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => openAttendance(timetable.find((period) => period.isOwnClass) ?? timetable[0])}
-                  className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95"
+                  disabled={!pendingAttendancePeriod}
+                  onClick={() => pendingAttendancePeriod && openAttendance(pendingAttendancePeriod)}
+                  className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95 disabled:cursor-default disabled:opacity-70"
                 >
-                  Mark attendance
-                  <ArrowRight className="size-4" />
+                  {pendingAttendancePeriod ? "Mark attendance" : "Attendance complete"}
+                  {pendingAttendancePeriod && <ArrowRight className="size-4" />}
                 </button>
               </section>
 
               <section data-ai-obstacle className="flex flex-col gap-3">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold tracking-tight">Today's classes</h2>
-                  <button type="button" className="font-semibold text-icon-accent text-sm hover:underline underline-offset-4">
+                  <h2 className="text-base font-semibold tracking-tight">Today's classes</h2>
+                  <button type="button" className="font-normal text-icon-accent text-sm hover:underline underline-offset-4">
                     View timetable
                   </button>
                 </div>
@@ -243,46 +272,46 @@ export default function Screen1() {
                       <div
                         key={p.period}
                         className={[
-                          "flex items-center gap-3 px-4 py-4 transition-colors md:px-5",
+                          "flex items-start gap-3 px-4 py-4 transition-colors md:px-5",
                           index < timetable.length - 1 ? "border-b" : "",
-                          periodState === "upcoming" ? "opacity-55" : "",
                           periodState === "running" ? "bg-primary-soft" : "",
                           periodState === "done" ? "bg-muted" : "",
+                          periodState === "upcoming" ? "text-muted-foreground" : "",
                         ].join(" ")}
                       >
-                        <div className="flex w-[4.25rem] shrink-0 flex-col gap-1 tabular-nums">
-                          <span className="font-semibold text-xs">{p.period}</span>
-                          <span className="whitespace-nowrap text-muted-foreground text-[11px]">{p.time}</span>
+                        <div className="flex w-24 shrink-0 flex-col gap-1 pt-0.5 tabular-nums">
+                          <span aria-label={`Period ${index + 1}`} title={`Period ${index + 1}`} className="text-sm font-medium">{p.period}</span>
+                          <span className="whitespace-nowrap text-muted-foreground text-sm font-normal">{p.time}</span>
                         </div>
                         <div className="grow min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-sm">{p.subject}</span>
-                            {periodState === "running" && <span className="shrink-0 rounded-full bg-primary-container px-2.5 py-1 text-[10px] font-bold text-on-primary-container">Now</span>}
+                            <span className="text-base font-semibold">{p.subject}</span>
+                            {periodState === "running" && <span className="shrink-0 rounded-full bg-primary-container px-2.5 py-1 text-[12px] font-medium text-on-primary-container">Now</span>}
                           </div>
-                          <div className="text-muted-foreground text-xs leading-relaxed">{p.details}</div>
-                          {p.isProxy && (
-                            <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                              <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground">Proxy</span>
-                            </div>
-                          )}
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-2 md:gap-y-1">
+                            <MetaText className="text-muted-foreground text-sm leading-relaxed" value={p.details} />
+                            {(p.isProxy || periodState === "missed") && (
+                              <span className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap ${p.isProxy ? "" : "basis-full md:basis-auto"}`}>
+                                {p.isProxy && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
+                                {periodState === "missed" && <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
+                              </span>
+                            )}
+                          </div>
                           {periodState === "running" && !attendance && canMarkAttendance && (
                             <button
                               type="button"
                               onClick={() => openAttendance(p)}
-                              className="mt-2 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-primary-container px-4 text-xs font-semibold text-on-primary-container transition-opacity hover:opacity-90"
+                              className="mt-2 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-primary-container px-4 text-sm font-normal text-on-primary-container transition-opacity hover:opacity-90"
                             >
                               Mark attendance
                               <ArrowRight aria-hidden="true" className="size-3.5" />
                             </button>
                           )}
                           {(periodState === "done" || periodState === "running") && attendance && (
-                            <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-icon-accent">
+                            <span className="mt-1.5 inline-flex items-center gap-1 text-sm font-normal text-icon-accent">
                               <Check aria-hidden="true" className="size-3.5" />
                               {attendance.present}/{attendance.total} present
                             </span>
-                          )}
-                          {periodState === "missed" && (
-                            <span className="mt-1.5 inline-flex rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-accent-foreground">Missed</span>
                           )}
                         </div>
                       </div>
@@ -294,13 +323,13 @@ export default function Screen1() {
               </div>
               <aside className="flex min-w-0 flex-col gap-7 md:gap-8">
               <section data-ai-obstacle className="flex flex-col gap-3">
-                <h2 className="text-xl font-semibold tracking-tight">Quick actions</h2>
-                <div className="grid grid-cols-5 gap-1">
+                <h2 className="text-base font-semibold tracking-tight">Quick actions</h2>
+                <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 md:grid-cols-3">
                   {quickActions.map(({ icon: Icon, label }) => (
                     <button
                       key={label}
                       type="button"
-                      className="flex min-h-[92px] min-w-0 flex-col items-center justify-start gap-2.5 rounded-2xl px-0 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-primary-soft"
+                      className="flex min-h-[92px] min-w-0 flex-col items-center justify-start gap-2.5 rounded-2xl px-0 py-1 text-sm font-normal text-foreground transition-colors hover:bg-primary-soft"
                     >
                       <span className="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-primary-soft text-icon-accent">
                         <Icon aria-hidden="true" className="size-6" />
@@ -318,18 +347,18 @@ export default function Screen1() {
               >
                 <Wallet className="text-icon-accent size-5" />
                 <div className="grow flex flex-col gap-1">
-                  <div className="text-muted-foreground text-xs">September salary</div>
-                  <div className="font-semibold text-sm">₹42,500</div>
+                  <div className="text-muted-foreground text-sm">September salary</div>
+                  <div className="font-semibold text-base">₹42,500</div>
                 </div>
-                <span className="rounded-full bg-status-soft text-status-foreground text-xs px-2 py-1">
+                <span className="rounded-full bg-status-soft text-status-foreground text-[12px] font-medium px-2 py-1">
                   Credited · 1 Oct
                 </span>
               </button>
 
               <section data-ai-obstacle className="flex flex-col gap-3">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold tracking-tight">Announcements</h2>
-                  <button type="button" className="font-semibold text-icon-accent text-sm hover:underline underline-offset-4">
+                  <h2 className="text-base font-semibold tracking-tight">Announcements</h2>
+                  <button type="button" className="font-normal text-icon-accent text-sm hover:underline underline-offset-4">
                     See all
                   </button>
                 </div>
@@ -340,11 +369,11 @@ export default function Screen1() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-sm leading-5">Sports Day volunteer list</h3>
-                        <span className="shrink-0 pt-0.5 text-[11px] text-muted-foreground">2h ago</span>
+                        <h3 className="text-base font-semibold leading-5">Sports Day volunteer list</h3>
+                        <span className="shrink-0 pt-0.5 text-sm text-muted-foreground">2h ago</span>
                       </div>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Please confirm your house duty before Friday.</p>
-                      <span className="mt-2 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">School</span>
+                      <p className="mt-1 text-sm font-normal leading-relaxed text-muted-foreground">Please confirm your house duty before Friday.</p>
+                      <span className="mt-2 inline-flex rounded-full bg-muted px-2 py-1 text-[12px] font-medium text-muted-foreground">School</span>
                     </div>
                   </article>
                   <article className="flex gap-3.5 border-t p-4">
@@ -353,18 +382,18 @@ export default function Screen1() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-sm leading-5">Bring geometry box on Monday</h3>
-                        <span className="shrink-0 pt-0.5 text-[11px] text-muted-foreground">Yesterday</span>
+                        <h3 className="text-base font-semibold leading-5">Bring geometry box on Monday</h3>
+                        <span className="shrink-0 pt-0.5 text-sm text-muted-foreground">Yesterday</span>
                       </div>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Class 8-B students should carry ruler and compass.</p>
-                      <span className="mt-2 inline-flex rounded-full bg-status-soft px-2 py-1 text-[11px] font-medium text-status-foreground">Class 8-B</span>
+                      <p className="mt-1 text-sm font-normal leading-relaxed text-muted-foreground">Class 8-B students should carry ruler and compass.</p>
+                      <span className="mt-2 inline-flex rounded-full bg-status-soft px-2 py-1 text-[12px] font-medium text-status-foreground">Class 8-B</span>
                     </div>
                   </article>
                 </div>
               </section>
 
               <section data-ai-obstacle className="flex flex-col gap-3">
-                <h2 className="text-xl font-semibold tracking-tight">Coming up</h2>
+                <h2 className="text-base font-semibold tracking-tight">Coming up</h2>
                 <div className="rounded-[24px] bg-card border px-4">
                   {[
                     { d: "28", m: "OCT", t: "Sports Day – Annual Function", s: "School event" },
@@ -374,13 +403,13 @@ export default function Screen1() {
                       key={e.t}
                       className={`flex gap-3 py-3.5 ${i === 0 ? "border-b" : ""}`}
                     >
-                      <div className="font-semibold rounded-lg bg-muted text-icon-accent text-xs flex flex-col justify-center items-center shrink-0 size-14">
+                  <div className="text-sm font-semibold rounded-lg bg-muted text-icon-accent flex flex-col justify-center items-center shrink-0 size-14">
                         <span>{e.d}</span>
                         <span>{e.m}</span>
                       </div>
                       <div>
-                        <div className="font-semibold text-sm">{e.t}</div>
-                        <div className="text-muted-foreground text-xs">{e.s}</div>
+                        <div className="text-base font-semibold">{e.t}</div>
+                        <div className="text-sm font-normal text-muted-foreground">{e.s}</div>
                       </div>
                     </div>
                   ))}
@@ -391,21 +420,21 @@ export default function Screen1() {
               </main>
             ) : activeNav === "Profile" ? (
               <main ref={mainContentRef} className="mx-auto flex min-h-[60vh] w-full max-w-3xl grow flex-col gap-6 px-4 pb-40 pt-8 md:px-8 md:pb-12 md:pt-10">
-                <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
-                <section className="flex items-center justify-between gap-4 rounded-[24px] border bg-card p-5 md:p-6">
+                <h1 className="text-base font-semibold leading-tight tracking-tight">Profile</h1>
+                <section data-ai-obstacle className="flex items-center justify-between gap-4 rounded-[24px] border bg-card p-5 md:p-6">
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-icon-accent">
                       <Moon aria-hidden="true" className="size-5" />
                     </span>
                     <div className="min-w-0">
-                      <h2 className="font-semibold text-sm">Dark mode</h2>
-                      <p id="dark-mode-description" className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  <h2 className="text-base font-semibold">Dark mode</h2>
+                      <p id="dark-mode-description" className="mt-1 text-sm leading-relaxed text-muted-foreground">
                         Preview Hawk with a darker color palette.
                       </p>
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">{isDarkMode ? "On" : "Off"}</span>
+                    <span className="text-sm font-normal text-muted-foreground">{isDarkMode ? "On" : "Off"}</span>
                     <button
                       type="button"
                       role="switch"
@@ -420,11 +449,21 @@ export default function Screen1() {
                     </button>
                   </div>
                 </section>
+                <section data-ai-obstacle className="rounded-[24px] border bg-card p-5 md:p-6">
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-5 text-sm font-normal text-foreground transition-colors hover:bg-muted"
+                  >
+                    <LogOut aria-hidden="true" className="size-4" />
+                    Log out
+                  </button>
+                </section>
               </main>
             ) : (
               <main ref={mainContentRef} className="flex min-h-[60vh] grow items-center justify-center px-6 pb-40 pt-8 text-center md:pb-12">
                 <div className="flex flex-col items-center gap-2">
-                  <h1 className="text-2xl font-bold tracking-tight">{activeNav}</h1>
+                <h1 className="text-base font-semibold leading-tight tracking-tight">{activeNav}</h1>
                   <p className="text-sm text-muted-foreground">Coming soon</p>
                 </div>
               </main>
@@ -434,7 +473,7 @@ export default function Screen1() {
 
           <nav
             aria-label="Primary navigation"
-            className="fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] left-1/2 z-20 flex min-h-[80px] w-[calc(100%-32px)] max-w-[520px] -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-background px-2 py-2 shadow-[0_12px_32px_rgba(23,35,29,0.14)] md:hidden"
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] left-1/2 z-20 flex min-h-[80px] w-[calc(100%-16px)] max-w-[520px] -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-background px-2 py-2 shadow-[0_12px_32px_rgba(23,35,29,0.14)] md:hidden"
           >
             {navItems.map(({ icon: Icon, label }) => (
               <button
@@ -442,7 +481,7 @@ export default function Screen1() {
                 type="button"
                 aria-current={activeNav === label ? "page" : undefined}
                 onClick={() => setActiveNav(label)}
-                className={`flex min-h-[64px] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-1 py-2 text-[11px] font-semibold transition-colors duration-200 ${
+                className={`flex min-h-[64px] min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-full px-0 py-2 text-sm font-normal transition-colors duration-200 ${
                   activeNav === label
                     ? "bg-primary-soft text-icon-accent"
                     : "text-muted-foreground hover:bg-muted"
@@ -474,47 +513,43 @@ export default function Screen1() {
                 }}
               >
                 <div>
-                  <h2 id="attendance-dialog-title" className="text-lg font-bold">Mark attendance</h2>
+                  <h2 id="attendance-dialog-title" className="text-base font-semibold">Mark attendance</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{attendanceTarget.period} · {attendanceTarget.subject}</p>
                 </div>
-                <label className="flex flex-col gap-1.5 text-sm font-medium">
+                <label className="flex flex-col gap-1.5 text-sm font-normal">
                   Total students
                   <input required type="number" min="1" step="1" value={attendanceTotal} onChange={(event) => setAttendanceTotal(event.target.value)} className="h-11 rounded-lg border border-border bg-background px-3" />
                 </label>
-                <label className="flex flex-col gap-1.5 text-sm font-medium">
+                <label className="flex flex-col gap-1.5 text-sm font-normal">
                   Students present
                   <input required type="number" min="0" max={attendanceTotal || undefined} step="1" value={attendancePresent} onChange={(event) => setAttendancePresent(event.target.value)} className="h-11 rounded-lg border border-border bg-background px-3" />
                 </label>
                 <div className="flex gap-2 pt-1">
-                  <button type="button" onClick={() => setAttendanceTarget(null)} className="min-h-11 flex-1 rounded-xl border border-border font-semibold hover:bg-muted">Cancel</button>
-                  <button type="submit" className="min-h-11 flex-1 rounded-xl bg-primary font-semibold text-primary-foreground">Save attendance</button>
+                  <button type="button" onClick={() => setAttendanceTarget(null)} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                  <button type="submit" className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Save attendance</button>
                 </div>
               </form>
             )}
           </dialog>
 
           <div
-            ref={aiDockRef}
-            aria-hidden={aiOverContent}
-            className="fixed z-30 right-[max(24px,calc((100vw-1440px)/2+24px))] bottom-[calc(env(safe-area-inset-bottom)+108px)] flex min-h-14 min-w-14 items-center justify-end gap-2 md:bottom-6"
+            aria-hidden={!aiAtHomeEnd}
+            className={`fixed right-[max(24px,calc((100vw-1440px)/2+24px))] bottom-[calc(env(safe-area-inset-bottom)+108px)] z-30 flex min-h-14 min-w-14 items-center justify-end gap-2 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none md:bottom-6 ${aiAtHomeEnd ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-24 opacity-0"}`}
           >
-            {!aiOverContent && (
-              <>
-                {showAiHint && (
-                  <span aria-hidden="true" className="shadow-sm rounded-full bg-popover text-popover-foreground text-xs px-3 py-2">
-                    Ask Hawk
-                  </span>
-                )}
-                <button
-                  aria-label="Ask Hawk AI"
-                  type="button"
-                  onClick={() => setAiOpen(true)}
-                  className="shadow-md rounded-full bg-primary text-primary-foreground flex justify-center items-center size-14"
-                >
-                  <Sparkles className="size-6" />
-                </button>
-              </>
+            {showAiHint && (
+              <span aria-hidden="true" className="shadow-sm rounded-full bg-popover text-popover-foreground text-sm px-3 py-2">
+                Ask Hawk
+              </span>
             )}
+            <button
+              aria-label="Ask Hawk AI"
+              tabIndex={aiAtHomeEnd ? 0 : -1}
+              type="button"
+              onClick={() => setAiOpen(true)}
+              className="shadow-md rounded-full bg-primary text-primary-foreground flex justify-center items-center size-14"
+            >
+              <Sparkles className="size-6" />
+            </button>
           </div>
 
           {aiOpen && (
@@ -531,13 +566,13 @@ export default function Screen1() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 id="hawk-ai-title" className="font-semibold text-lg">Hawk AI</h2>
-                    <p className="text-muted-foreground text-xs">
+                    <h2 id="hawk-ai-title" className="text-base font-semibold">Hawk AI</h2>
+                    <p className="text-muted-foreground text-sm">
                       Tell me what you need. I'll draft it for you.
                     </p>
                   </div>
-                  <div className="text-xs flex gap-1">
-                    <button type="button" className="font-semibold">English</button>
+                  <div className="text-sm flex gap-1">
+                    <button type="button" className="text-sm font-normal">English</button>
                     <span className="text-muted-foreground">|</span>
                     <button type="button">हिन्दी</button>
                   </div>
@@ -549,7 +584,7 @@ export default function Screen1() {
                 >
                   <Mic className="size-6" />
                 </button>
-                <p className="text-center text-xs text-muted-foreground mt-1">Tap and speak</p>
+                <p className="text-center text-sm text-muted-foreground mt-1">Tap and speak</p>
 
                 <div className="flex mt-4 gap-2">
                   <input
@@ -571,7 +606,7 @@ export default function Screen1() {
                     "Create homework for Class 8-B",
                     "Mark today's attendance",
                   ].map((s) => (
-                    <button key={s} type="button" className="rounded-full bg-muted text-xs px-3 py-2">
+                    <button key={s} type="button" className="rounded-full bg-muted text-sm px-3 py-2">
                       {s}
                     </button>
                   ))}
@@ -579,17 +614,17 @@ export default function Screen1() {
 
                 <div className="rounded-lg bg-muted border mt-4 p-3">
                   <div className="font-semibold text-sm">Sports Day notice</div>
-                  <p className="text-muted-foreground text-xs mt-1">
+                  <p className="text-muted-foreground text-sm mt-1">
                     Dear parents, our Annual Sports Day is on 28 October. Please ensure
                     students arrive in house colours by 8:30 AM.
                   </p>
                   <div className="flex mt-3 gap-2">
-                    <button type="button" className="rounded-lg text-xs border px-3 py-2">
+                    <button type="button" className="rounded-lg text-sm font-normal border px-3 py-2">
                       Edit
                     </button>
                     <button
                       type="button"
-                      className="font-semibold rounded-lg bg-primary text-primary-foreground text-xs px-3 py-2"
+                      className="rounded-lg bg-primary text-primary-foreground text-sm font-normal px-3 py-2"
                     >
                       Post to parents
                     </button>
@@ -599,7 +634,7 @@ export default function Screen1() {
                 <button
                   type="button"
                   onClick={() => setAiOpen(false)}
-                  className="rounded-lg text-sm border mt-4 w-full h-11"
+                  className="rounded-lg text-sm font-normal border mt-4 w-full h-11"
                 >
                   Close
                 </button>
