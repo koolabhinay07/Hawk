@@ -65,7 +65,7 @@ export default function Screen1() {
     }
   });
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord>>(loadAttendanceRecords);
-  const [proxyAttendanceRights, setProxyAttendanceRights] = useState(() => {
+  const [proxyAttendanceRights] = useState(() => {
     try {
       return window.localStorage.getItem("hawk-proxy-attendance-rights") === "true";
     } catch {
@@ -133,14 +133,6 @@ export default function Screen1() {
       // Attendance counts remain available for this session if browser storage is unavailable.
     }
   }, [attendanceRecords]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem("hawk-proxy-attendance-rights", String(proxyAttendanceRights));
-    } catch {
-      // Proxy rights remain available for this session if browser storage is unavailable.
-    }
-  }, [proxyAttendanceRights]);
 
   useEffect(() => {
     const dialog = attendanceDialogRef.current;
@@ -271,16 +263,6 @@ export default function Screen1() {
                           {p.isProxy && (
                             <div className="mt-1.5 flex flex-wrap items-center gap-2">
                               <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground">Proxy</span>
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked={proxyAttendanceRights}
-                                aria-label={`${proxyAttendanceRights ? "Revoke" : "Grant"} attendance rights for ${p.period} proxy period`}
-                                onClick={() => setProxyAttendanceRights((enabled) => !enabled)}
-                                className="min-h-9 rounded-full border border-border bg-card px-3 text-[11px] font-semibold text-foreground hover:bg-muted focus-visible:outline-offset-2"
-                              >
-                                {proxyAttendanceRights ? "Revoke rights" : "Grant rights"}
-                              </button>
                             </div>
                           )}
                           {periodState === "running" && !attendance && canMarkAttendance && (
