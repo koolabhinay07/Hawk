@@ -234,6 +234,10 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const [loadedProxyDateKey, setLoadedProxyDateKey] = useState(attendanceDateKey);
   const [proxyNotification, setProxyNotification] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [developerMode, setDeveloperMode] = useState(() => window.localStorage.getItem("hawk-developer-mode") === "enabled");
+  const [developerPasswordOpen, setDeveloperPasswordOpen] = useState(false);
+  const [developerPassword, setDeveloperPassword] = useState("");
+  const [developerPasswordError, setDeveloperPasswordError] = useState("");
   const [proxyAttendanceRights] = useState(() => {
     try {
       return window.localStorage.getItem("hawk-proxy-attendance-rights") === "true";
@@ -278,6 +282,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const mainContentRef = useRef<HTMLElement>(null);
   const attendanceDialogRef = useRef<HTMLDialogElement>(null);
   const resetDialogRef = useRef<HTMLDialogElement>(null);
+  const developerPasswordDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setClock(new Date()), 15_000);
@@ -436,6 +441,16 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     if (!resetDialogOpen && dialog.open) dialog.close();
   }, [resetDialogOpen]);
 
+  useEffect(() => {
+    const dialog = developerPasswordDialogRef.current;
+    if (!dialog) return;
+    if (developerPasswordOpen && !dialog.open) {
+      dialog.showModal();
+      dialog.querySelector<HTMLInputElement>("input")?.focus();
+    }
+    if (!developerPasswordOpen && dialog.open) dialog.close();
+  }, [developerPasswordOpen]);
+
   function openAttendance(period: TimetablePeriod) {
     if (scheduleMinute < period.startMinute) return;
     const record = visibleAttendanceRecords[period.period];
@@ -491,6 +506,20 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     if (resetDateKey !== attendanceDateKey) setProxyRequests(loadProxyRequests(resetDateKey, timetable));
     setResetDialogOpen(false);
     setProxyNotification(notice);
+  }
+
+  function unlockDeveloperMode(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (developerPassword !== "8990") {
+      setDeveloperPasswordError("Incorrect password. Please try again.");
+      return;
+    }
+    window.localStorage.setItem("hawk-developer-mode", "enabled");
+    setDeveloperMode(true);
+    setDeveloperPassword("");
+    setDeveloperPasswordError("");
+    setDeveloperPasswordOpen(false);
+    setResetDialogOpen(true);
   }
 
   return (
@@ -879,23 +908,22 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     </button>
                   </div>
                 </section>
-                {import.meta.env.DEV && (
-                  <section data-ai-obstacle className="rounded-[24px] border bg-card p-5 md:p-6">
+                  <section data-ai-obstacle className={`rounded-[24px] border bg-card p-5 md:p-6 ${developerMode ? "" : "opacity-70"}`}>
                     <div className="flex items-center justify-between gap-4">
                       <div className="min-w-0">
                         <h2 className="text-base font-semibold">Reset periods</h2>
                         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Resets today’s timetable to start 10 minutes from now (IST).</p>
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">{developerMode ? "Developer mode enabled" : "Developer only"}</p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setResetDialogOpen(true)}
-                        className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                        onClick={() => developerMode ? setResetDialogOpen(true) : setDeveloperPasswordOpen(true)}
+                        className={`inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border px-4 text-sm font-medium transition-colors ${developerMode ? "border-border bg-background text-foreground hover:bg-muted" : "border-border bg-muted text-muted-foreground hover:bg-muted"}`}
                       >
                         Reset
                       </button>
                     </div>
                   </section>
-                )}
                 <section data-ai-obstacle className="rounded-[24px] border bg-card p-5 md:p-6">
                   <button
                     type="button"
@@ -939,6 +967,37 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               </button>
             ))}
           </nav>
+
+          <dialog
+            ref={developerPasswordDialogRef}
+            aria-labelledby="developer-password-title"
+            onCancel={(event) => { event.preventDefault(); setDeveloperPasswordOpen(false); setDeveloperPasswordError(""); setDeveloperPassword(""); }}
+            onClick={(event) => { if (event.target === developerPasswordDialogRef.current) { setDeveloperPasswordOpen(false); setDeveloperPasswordError(""); setDeveloperPassword(""); } }}
+            className="m-auto w-[calc(100%-32px)] max-w-sm rounded-2xl border border-border bg-card p-0 text-foreground shadow-2xl backdrop:bg-foreground/50"
+          >
+            <form onSubmit={unlockDeveloperMode} className="flex flex-col gap-4 p-5">
+              <div>
+                <h2 id="developer-password-title" className="text-base font-semibold">Developer access</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Enter the developer password to enable testing tools.</p>
+              </div>
+              <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="developer-password">
+                Password
+                <input
+                  id="developer-password"
+                  type="password"
+                  autoComplete="off"
+                  value={developerPassword}
+                  onChange={(event) => { setDeveloperPassword(event.target.value); setDeveloperPasswordError(""); }}
+                  className="min-h-12 rounded-xl border border-border bg-background px-4 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                />
+              </label>
+              {developerPasswordError && <p role="alert" className="text-sm text-destructive">{developerPasswordError}</p>}
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => { setDeveloperPasswordOpen(false); setDeveloperPasswordError(""); setDeveloperPassword(""); }} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                <button type="submit" className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Continue</button>
+              </div>
+            </form>
+          </dialog>
 
           <dialog
             ref={resetDialogRef}
