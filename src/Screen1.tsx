@@ -20,7 +20,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { getPeriodState, getScheduleMinute, hasAttendanceRights, timetable, type AttendanceRecord, type TimetablePeriod } from "./timetable";
+import { allowRetroactiveMarking, getNextWorkingDay, getPeriodState, getScheduleMinute, getTodaysAttendanceSummary, hasAttendanceRights, schoolClosedDays, timetable, type AttendanceRecord, type TimetablePeriod } from "./timetable";
 
 const quickActions = [
   { icon: ClipboardCheck, label: "Attendance" },
@@ -36,6 +36,8 @@ const navItems = [
   { icon: GraduationCap, label: "Academics" },
   { icon: User, label: "Profile" },
 ];
+
+const firstScheduledPeriod = [...timetable].sort((a, b) => a.startMinute - b.startMinute)[0];
 
 function formatScheduleTime(minute: number) {
   const hour24 = Math.floor(minute / 60);
@@ -57,13 +59,30 @@ function MetaText({ value, className }: { value: string; className: string }) {
   );
 }
 
-function loadAttendanceRecords(): Record<string, AttendanceRecord> {
+function getAttendanceDateKey(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+  return `${year}-${month}-${day}`;
+}
+
+function loadAttendanceRecords(dateKey: string): Record<string, AttendanceRecord> {
   try {
-    const parsed: unknown = JSON.parse(window.localStorage.getItem("hawk-attendance-records") ?? "{}");
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(`hawk-attendance-records:${dateKey}`) ?? "{}");
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
     return Object.fromEntries(Object.entries(parsed).filter(([periodId, value]) => {
       if (!timetable.some((period) => period.period === periodId) || !value || typeof value !== "object") return false;
       const record = value as Partial<AttendanceRecord>;
+      const period = timetable.find((item) => item.period === periodId);
+      if (!period || !Number.isFinite(record.markedAt)) return false;
+      const markedAt = new Date(record.markedAt as number);
+      if (getAttendanceDateKey(markedAt) !== dateKey || getScheduleMinute(markedAt) < period.startMinute) return false;
       return Number.isInteger(record.present) && Number.isInteger(record.total) &&
         (record.present ?? -1) >= 0 && (record.total ?? 0) > 0 &&
         (record.present ?? Infinity) <= (record.total ?? -1);
@@ -73,7 +92,75 @@ function loadAttendanceRecords(): Record<string, AttendanceRecord> {
   }
 }
 
-export default function Screen1({ onLogout }: { onLogout: () => void }) {
+function loadConductedPeriods(dateKey: string): Record<string, number> {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(`hawk-conducted-periods:${dateKey}`) ?? "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(Object.entries(parsed).filter(([periodId, value]) => {
+      const period = timetable.find((item) => item.period === periodId);
+      if (!period || typeof value !== "number" || !Number.isFinite(value)) return false;
+      const conductedAt = new Date(value);
+      return getAttendanceDateKey(conductedAt) === dateKey && getScheduleMinute(conductedAt) >= period.startMinute;
+    }));
+  } catch {
+    return {};
+  }
+}
+
+function isPeriodConducted(period: TimetablePeriod, records: Record<string, number>, dateKey: string, scheduleMinute: number) {
+  const conductedAt = records[period.period];
+  if (!Number.isFinite(conductedAt) || scheduleMinute < period.startMinute) return false;
+  const timestamp = new Date(conductedAt);
+  return getAttendanceDateKey(timestamp) === dateKey && getScheduleMinute(timestamp) >= period.startMinute;
+}
+
+type ProxyRequest = {
+  status: "pending" | "accepted" | "expired";
+  requestedAt?: number;
+  acceptedAt?: number;
+  coveringTeacherName?: string;
+};
+
+function parseProxyRequests(raw: string | null): Record<string, ProxyRequest> {
+  try {
+    const parsed: unknown = JSON.parse(raw ?? "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(Object.entries(parsed).filter(([periodId, value]) => {
+      if (!timetable.some((period) => period.period === periodId) || !value || typeof value !== "object") return false;
+      const request = value as Partial<ProxyRequest>;
+      return request.status === "pending" || request.status === "accepted" || request.status === "expired";
+    }).map(([periodId, value]) => [periodId, {
+      status: (value as ProxyRequest).status,
+      requestedAt: Number.isFinite((value as ProxyRequest).requestedAt) ? (value as ProxyRequest).requestedAt : undefined,
+      acceptedAt: Number.isFinite((value as ProxyRequest).acceptedAt) ? (value as ProxyRequest).acceptedAt : undefined,
+      coveringTeacherName: typeof (value as ProxyRequest).coveringTeacherName === "string" ? (value as ProxyRequest).coveringTeacherName : undefined,
+    }]));
+  } catch {
+    return {};
+  }
+}
+
+function loadProxyRequests(dateKey: string) {
+  try {
+    return parseProxyRequests(window.localStorage.getItem(`hawk-proxy-requests:${dateKey}`));
+  } catch {
+    return {};
+  }
+}
+
+function getProxyRequestStatus(request: ProxyRequest | undefined, period: TimetablePeriod, dateKey: string, scheduleMinute: number) {
+  if (!request) return undefined;
+  if (request.status === "expired") return "expired" as const;
+  if (request.status === "accepted") {
+    if (request.acceptedAt === undefined) return scheduleMinute >= period.startMinute ? "expired" as const : "accepted" as const;
+    const acceptedAt = new Date(request.acceptedAt);
+    if (getAttendanceDateKey(acceptedAt) !== dateKey || getScheduleMinute(acceptedAt) >= period.startMinute) return "expired" as const;
+    return "accepted" as const;
+  }
+  return scheduleMinute >= period.startMinute ? "expired" as const : "pending" as const;
+}
+
+export default function Screen1({ onLogout, teacherName }: { onLogout: () => void; teacherName: string }) {
   const [aiOpen, setAiOpen] = useState(false);
   const [showAiHint, setShowAiHint] = useState(true);
   const [aiAtHomeEnd, setAiAtHomeEnd] = useState(false);
@@ -85,7 +172,15 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
       return false;
     }
   });
-  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord>>(loadAttendanceRecords);
+  const [clock, setClock] = useState(() => new Date());
+  const attendanceDateKey = getAttendanceDateKey(clock);
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord>>(() => loadAttendanceRecords(attendanceDateKey));
+  const [loadedAttendanceDateKey, setLoadedAttendanceDateKey] = useState(attendanceDateKey);
+  const [conductedPeriods, setConductedPeriods] = useState<Record<string, number>>(() => loadConductedPeriods(attendanceDateKey));
+  const [loadedConductedDateKey, setLoadedConductedDateKey] = useState(attendanceDateKey);
+  const [proxyRequests, setProxyRequests] = useState<Record<string, ProxyRequest>>(() => loadProxyRequests(attendanceDateKey));
+  const [loadedProxyDateKey, setLoadedProxyDateKey] = useState(attendanceDateKey);
+  const [proxyNotification, setProxyNotification] = useState("");
   const [proxyAttendanceRights] = useState(() => {
     try {
       return window.localStorage.getItem("hawk-proxy-attendance-rights") === "true";
@@ -96,14 +191,19 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
   const [attendanceTarget, setAttendanceTarget] = useState<TimetablePeriod | null>(null);
   const [attendanceTotal, setAttendanceTotal] = useState("");
   const [attendancePresent, setAttendancePresent] = useState("");
-  const [clock, setClock] = useState(() => new Date());
   const scheduleMinute = getScheduleMinute(clock);
-  const pendingAttendancePeriods = timetable.filter((period) => period.isOwnClass && !attendanceRecords[period.period]);
-  const pendingAttendancePeriod = pendingAttendancePeriods[0];
-  const attendanceDeadlineMinute = pendingAttendancePeriod ? pendingAttendancePeriod.endMinute + 20 : undefined;
-  const attendanceDeadlineLabel = attendanceDeadlineMinute === undefined
-    ? "Complete"
-    : `Due by ${formatScheduleTime(attendanceDeadlineMinute)}`;
+  const activePeriodIndex = timetable.findIndex((period) => scheduleMinute >= period.startMinute && scheduleMinute < period.endMinute);
+  const activePeriod = activePeriodIndex >= 0 ? timetable[activePeriodIndex] : undefined;
+  const activePeriodAttendance = activePeriod ? attendanceRecords[activePeriod.period] : undefined;
+  const activePeriodConducted = activePeriod ? isPeriodConducted(activePeriod, conductedPeriods, attendanceDateKey, scheduleMinute) : false;
+  const nextUpcomingPeriod = timetable.find((period) => period.startMinute > scheduleMinute);
+  const heroPeriod = activePeriod ?? nextUpcomingPeriod ?? timetable[timetable.length - 1];
+  const cancelableProxyRequestPeriod = timetable.find((period) =>
+    getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute) === "pending",
+  );
+  const attendanceSummary = getTodaysAttendanceSummary(timetable, scheduleMinute, attendanceRecords, proxyAttendanceRights);
+  const { dayComplete } = attendanceSummary;
+  const nextWorkingDay = getNextWorkingDay(clock, schoolClosedDays);
   const dashboardDate = new Intl.DateTimeFormat("en-IN", {
     weekday: "long",
     day: "numeric",
@@ -117,6 +217,38 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
     const timer = window.setInterval(() => setClock(new Date()), 15_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (loadedAttendanceDateKey === attendanceDateKey) return;
+    setAttendanceRecords(loadAttendanceRecords(attendanceDateKey));
+    setLoadedAttendanceDateKey(attendanceDateKey);
+  }, [attendanceDateKey, loadedAttendanceDateKey]);
+
+  useEffect(() => {
+    if (loadedConductedDateKey === attendanceDateKey) return;
+    setConductedPeriods(loadConductedPeriods(attendanceDateKey));
+    setLoadedConductedDateKey(attendanceDateKey);
+  }, [attendanceDateKey, loadedConductedDateKey]);
+
+  useEffect(() => {
+    if (loadedProxyDateKey === attendanceDateKey) return;
+    setProxyRequests(loadProxyRequests(attendanceDateKey));
+    setLoadedProxyDateKey(attendanceDateKey);
+  }, [attendanceDateKey, loadedProxyDateKey]);
+
+  useEffect(() => {
+    setProxyRequests((requests) => {
+      let changed = false;
+      const next = { ...requests };
+      for (const period of timetable) {
+        if (next[period.period]?.status === "pending" && scheduleMinute >= period.startMinute) {
+          next[period.period] = { ...next[period.period], status: "expired" };
+          changed = true;
+        }
+      }
+      return changed ? next : requests;
+    });
+  }, [scheduleMinute]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowAiHint(false), 3_000);
@@ -153,12 +285,67 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
   }, [isDarkMode]);
 
   useEffect(() => {
+    if (loadedAttendanceDateKey !== attendanceDateKey) return;
     try {
-      window.localStorage.setItem("hawk-attendance-records", JSON.stringify(attendanceRecords));
+      window.localStorage.setItem(`hawk-attendance-records:${attendanceDateKey}`, JSON.stringify(attendanceRecords));
     } catch {
       // Attendance counts remain available for this session if browser storage is unavailable.
     }
-  }, [attendanceRecords]);
+  }, [attendanceDateKey, attendanceRecords, loadedAttendanceDateKey]);
+
+  useEffect(() => {
+    if (loadedConductedDateKey !== attendanceDateKey) return;
+    try {
+      window.localStorage.setItem(`hawk-conducted-periods:${attendanceDateKey}`, JSON.stringify(conductedPeriods));
+    } catch {
+      // Conducted state remains available for this session if browser storage is unavailable.
+    }
+  }, [attendanceDateKey, conductedPeriods, loadedConductedDateKey]);
+
+  useEffect(() => {
+    if (loadedProxyDateKey !== attendanceDateKey) return;
+    try {
+      window.localStorage.setItem(`hawk-proxy-requests:${attendanceDateKey}`, JSON.stringify(proxyRequests));
+    } catch {
+      // Proxy requests remain available for this session if browser storage is unavailable.
+    }
+  }, [attendanceDateKey, loadedProxyDateKey, proxyRequests]);
+
+  useEffect(() => {
+    if (!proxyNotification) return;
+    const timer = window.setTimeout(() => setProxyNotification(""), 6500);
+    return () => window.clearTimeout(timer);
+  }, [proxyNotification]);
+
+  useEffect(() => {
+    const storageKey = `hawk-proxy-requests:${attendanceDateKey}`;
+    function handleProxyRequestUpdate(event: StorageEvent) {
+      if (event.key !== storageKey || loadedProxyDateKey !== attendanceDateKey) return;
+      const incoming = parseProxyRequests(event.newValue);
+      for (const [periodId, request] of Object.entries(incoming)) {
+        if (request.status !== "accepted" || proxyRequests[periodId]?.status !== "pending") continue;
+        const period = timetable.find((item) => item.period === periodId);
+        if (!period) continue;
+        const acceptedAt = request.acceptedAt ?? Date.now();
+        const acceptedDate = getAttendanceDateKey(new Date(acceptedAt));
+        const acceptedMinute = getScheduleMinute(new Date(acceptedAt));
+        if (acceptedDate !== attendanceDateKey || acceptedMinute >= period.startMinute) {
+          incoming[periodId] = { ...request, status: "expired" };
+          continue;
+        }
+        incoming[periodId] = { ...request, acceptedAt };
+        const coveringTeacher = request.coveringTeacherName?.trim() || "A covering teacher";
+        const message = `Your proxy request for ${periodId} was accepted by ${coveringTeacher}.`;
+        setProxyNotification(message);
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("Proxy request accepted", { body: message });
+        }
+      }
+      setProxyRequests(incoming);
+    }
+    window.addEventListener("storage", handleProxyRequestUpdate);
+    return () => window.removeEventListener("storage", handleProxyRequestUpdate);
+  }, [attendanceDateKey, loadedProxyDateKey, proxyRequests]);
 
   useEffect(() => {
     const dialog = attendanceDialogRef.current;
@@ -171,10 +358,29 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
   }, [attendanceTarget]);
 
   function openAttendance(period: TimetablePeriod) {
+    if (scheduleMinute < period.startMinute) return;
     const record = attendanceRecords[period.period];
     setAttendanceTotal(String(record?.total ?? period.students ?? ""));
     setAttendancePresent(String(record?.present ?? ""));
     setAttendanceTarget(period);
+  }
+
+  function requestProxy(period: TimetablePeriod) {
+    setProxyRequests((requests) => ({
+      ...requests,
+      [period.period]: { status: "pending", requestedAt: Date.now() },
+    }));
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      void Notification.requestPermission();
+    }
+  }
+
+  function cancelProxyRequest(period: TimetablePeriod) {
+    setProxyRequests((requests) => {
+      const next = { ...requests };
+      delete next[period.period];
+      return next;
+    });
   }
 
   return (
@@ -184,10 +390,10 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
             <header className="fixed inset-x-0 top-0 z-40 mx-auto flex h-[76px] w-full max-w-[1440px] items-center justify-between border-b bg-background px-4 md:px-8">
               <div className="flex items-center gap-3">
                 <div className="text-base font-semibold rounded-2xl bg-primary-container text-on-primary-container flex justify-center items-center size-10">
-                  PS
+                  {teacherName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}
                 </div>
                 <div>
-                  <div className="font-semibold text-base">Namaste, Priya Sharma</div>
+                  <div className="font-semibold text-base">Namaste, {teacherName}</div>
                   <div className="text-muted-foreground text-sm">
                     Delhi Public School, Madhubani
                   </div>
@@ -202,6 +408,12 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
                 <span className="rounded-full bg-primary-foreground absolute top-2 right-2.5 size-2" />
               </button>
             </header>
+            {proxyNotification && (
+              <div role="status" aria-live="polite" className="fixed inset-x-4 top-20 z-50 mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-lg">
+                <Check aria-hidden="true" className="size-5 shrink-0 text-icon-accent" />
+                {proxyNotification}
+              </div>
+            )}
 
             <nav aria-label="Primary navigation" className="fixed bottom-0 left-[max(0px,calc((100vw-1440px)/2))] top-[76px] z-20 hidden w-20 flex-col items-center gap-3 border-r border-border bg-background py-6 md:flex">
               {navItems.map(({ icon: Icon, label }) => (
@@ -223,38 +435,115 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
               <main ref={mainContentRef} className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-4 pb-44 pt-7 md:gap-9 md:px-8 md:pb-12 md:pt-10">
               <section data-ai-obstacle className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{dashboardDate}</h1>
-                <MetaText className="text-muted-foreground text-sm md:pb-1" value={`${timetable.length} classes today · ${pendingAttendancePeriods.length} attendance pending`} />
+                <MetaText className="text-muted-foreground text-sm md:pb-1" value={`${attendanceSummary.totalClassCount} classes today · ${attendanceSummary.headerCount} ${attendanceSummary.headerLabel}`} />
               </section>
 
               <div className="grid gap-7 md:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.9fr)] md:gap-8">
               <div className="flex min-w-0 flex-col gap-7 md:gap-8">
 
-              <section data-ai-obstacle className="rounded-[28px] bg-primary-container p-5 text-on-primary-container md:p-6">
+              <section data-ai-obstacle className={`rounded-[28px] p-5 md:p-6 ${dayComplete ? "border border-border bg-card text-foreground" : "bg-primary-container text-on-primary-container"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
-                      <Clock className="size-3.5" />
-                      Attendance Pending
-                    </div>
-                    <h2 className="mt-2 text-base font-semibold tracking-tight">{pendingAttendancePeriod?.details.split(" · ")[0] ?? "Attendance complete"}</h2>
-                    <MetaText className="text-sm text-on-primary-container/80" value={pendingAttendancePeriod ? `${pendingAttendancePeriod.students ?? 0} students · Your class` : "You're all caught up"} />
+                    {dayComplete ? (
+                      <>
+                        <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-muted-foreground">
+                          <Check aria-hidden="true" className="size-3.5" />
+                          DAY COMPLETE
+                        </div>
+                        <MetaText className="mt-2 block text-sm text-muted-foreground" value={`${attendanceSummary.markedCount} of ${attendanceSummary.totalClassCount} periods marked · ${attendanceSummary.missedCount} missed`} />
+                        {firstScheduledPeriod && (
+                          <MetaText
+                            className="mt-2 block text-sm"
+                            value={`Next class: ${nextWorkingDay.label}`}
+                          />
+                        )}
+                      </>
+                    ) : activePeriod ? (
+                      <>
+                        <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
+                          {activePeriod.period === "P1" && activePeriodAttendance ? <Check className="size-3.5" /> : <Clock className="size-3.5" />}
+                          {activePeriod.period === "P1"
+                            ? activePeriodAttendance ? "Attendance marked" : "Attendance pending"
+                            : activePeriodConducted ? "Conducted" : "Class in progress"}
+                        </div>
+                        <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.subject}</h2>
+                        <MetaText className="text-sm text-on-primary-container/80" value={activePeriod.isOwnClass ? `${activePeriod.students ?? 0} students · Your class` : activePeriod.details} />
+                      </>
+                    ) : heroPeriod ? (
+                      <>
+                        <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
+                          <Clock className="size-3.5" />
+                          {nextUpcomingPeriod ? "Up next" : "No more classes today"}
+                        </div>
+                        <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period} · {heroPeriod.subject}</h2>
+                        <MetaText className="text-sm text-on-primary-container/80" value={`${heroPeriod.time} · ${heroPeriod.details}`} />
+                      </>
+                    ) : null}
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
-                    {attendanceDeadlineLabel}
-                  </span>
+                  {!dayComplete && activePeriod && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
+                      {activePeriod.period === "P1" ? activePeriodAttendance ? "Marked" : "Now" : activePeriodConducted ? "Conducted" : "Now"}
+                    </span>
+                  )}
+                  {!dayComplete && !activePeriod && nextUpcomingPeriod && (
+                    <span className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
+                      {nextUpcomingPeriod.time}
+                    </span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  disabled={!pendingAttendancePeriod}
-                  onClick={() => pendingAttendancePeriod && openAttendance(pendingAttendancePeriod)}
-                  className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95 disabled:cursor-default disabled:opacity-70"
-                >
-                  {pendingAttendancePeriod ? "Mark attendance" : "Attendance complete"}
-                  {pendingAttendancePeriod && <ArrowRight className="size-4" />}
-                </button>
+                {dayComplete ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById("today-classes")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                      className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full border border-border bg-muted px-5 text-sm font-medium text-foreground transition-colors hover:bg-border"
+                    >
+                      View timetable
+                    </button>
+                    {allowRetroactiveMarking && attendanceSummary.eligibleForRetroactiveMarkingCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => openAttendance(attendanceSummary.retroactiveEligiblePeriods[0])}
+                        className="mt-3 flex min-h-11 w-full items-center justify-center rounded-full px-4 text-sm font-medium text-icon-accent hover:bg-primary-soft"
+                      >
+                        {attendanceSummary.eligibleForRetroactiveMarkingCount} {attendanceSummary.eligibleForRetroactiveMarkingCount === 1 ? "class needs" : "classes need"} attendance
+                      </button>
+                    )}
+                    {attendanceSummary.notEligibleForRetroactiveMarkingCount > 0 && (
+                      <p className="mt-2 text-center text-sm text-muted-foreground">
+                        {attendanceSummary.notEligibleForRetroactiveMarkingCount} {attendanceSummary.notEligibleForRetroactiveMarkingCount === 1 ? "period requires" : "periods require"} administrator authorization.
+                      </p>
+                    )}
+                  </>
+                ) : activePeriod?.period === "P1" && !activePeriodAttendance ? (
+                  <button
+                    type="button"
+                    onClick={() => openAttendance(activePeriod)}
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                  >
+                    Mark Attendance<ArrowRight className="size-4" />
+                  </button>
+                ) : activePeriod && activePeriod.period !== "P1" && !activePeriodConducted ? (
+                  <button
+                    type="button"
+                    onClick={() => setConductedPeriods((periods) => ({ ...periods, [activePeriod.period]: Date.now() }))}
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                  >
+                    Mark as Conducted<ArrowRight className="size-4" />
+                  </button>
+                ) : null}
+                {!dayComplete && cancelableProxyRequestPeriod && (
+                  <button
+                    type="button"
+                    onClick={() => cancelProxyRequest(cancelableProxyRequestPeriod)}
+                    className="mt-2 flex min-h-10 w-full items-center justify-center text-sm font-medium text-icon-accent underline underline-offset-4 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Cancel Request for {cancelableProxyRequestPeriod.period}
+                  </button>
+                )}
               </section>
 
-              <section data-ai-obstacle className="flex flex-col gap-3">
+              <section id="today-classes" data-ai-obstacle className="flex flex-col gap-3 scroll-mt-24">
                 <div className="flex justify-between items-center">
                   <h2 className="text-base font-semibold tracking-tight">Today's classes</h2>
                   <button type="button" className="font-normal text-icon-accent text-sm hover:underline underline-offset-4">
@@ -267,6 +556,14 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
                     const attendance = attendanceRecords[p.period];
                     const periodState = getPeriodState(p, scheduleMinute, attendance);
                     const canMarkAttendance = hasAttendanceRights(p, proxyAttendanceRights);
+                    const proxyRequest = proxyRequests[p.period];
+                    const proxyRequestStatus = getProxyRequestStatus(proxyRequest, p, attendanceDateKey, scheduleMinute);
+                    const isProxyAccepted = proxyRequestStatus === "accepted";
+                    const isConducted = isPeriodConducted(p, conductedPeriods, attendanceDateKey, scheduleMinute);
+                    const canRequestProxy = activePeriodIndex >= 0 && index === activePeriodIndex + 1 && p.period !== "P1" && periodState === "upcoming" && !p.isOwnClass && !p.isProxy && !proxyRequestStatus;
+                    const periodDetails = isProxyAccepted
+                      ? `${p.details} · Covered by ${proxyRequest?.coveringTeacherName?.trim() || "Covering teacher"}`
+                      : p.details;
 
                     return (
                       <div
@@ -279,7 +576,7 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
                           periodState === "upcoming" ? "text-muted-foreground" : "",
                         ].join(" ")}
                       >
-                        <div className="flex w-24 shrink-0 flex-col gap-1 pt-0.5 tabular-nums">
+                        <div className="flex w-28 shrink-0 flex-col gap-1 pt-0.5 tabular-nums">
                           <span aria-label={`Period ${index + 1}`} title={`Period ${index + 1}`} className="text-sm font-medium">{p.period}</span>
                           <span className="whitespace-nowrap text-muted-foreground text-sm font-normal">{p.time}</span>
                         </div>
@@ -289,25 +586,28 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
                             {periodState === "running" && <span className="shrink-0 rounded-full bg-primary-container px-2.5 py-1 text-[12px] font-medium text-on-primary-container">Now</span>}
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-2 md:gap-y-1">
-                            <MetaText className="text-muted-foreground text-sm leading-relaxed" value={p.details} />
-                            {(p.isProxy || periodState === "missed") && (
+                            <MetaText className="text-muted-foreground text-sm leading-relaxed" value={periodDetails} />
+                            {((p.isProxy && periodState !== "upcoming") || (canMarkAttendance && periodState === "missed" && !attendance) || (!canMarkAttendance && isConducted) || proxyRequestStatus === "pending" || proxyRequestStatus === "expired" || isProxyAccepted) && (
                               <span className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap ${p.isProxy ? "" : "basis-full md:basis-auto"}`}>
-                                {p.isProxy && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
-                                {periodState === "missed" && <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
+                                {p.isProxy && periodState !== "upcoming" && !isProxyAccepted && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
+                                {proxyRequestStatus === "pending" && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Pending</span>}
+                                {proxyRequestStatus === "expired" && <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Request Expired</span>}
+                                {isProxyAccepted && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
+                                {canMarkAttendance && periodState === "missed" && !attendance && <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
+                                {!canMarkAttendance && isConducted && <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Conducted</span>}
                               </span>
                             )}
                           </div>
-                          {periodState === "running" && !attendance && canMarkAttendance && (
+                          {canRequestProxy && (
                             <button
                               type="button"
-                              onClick={() => openAttendance(p)}
-                              className="mt-2 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-primary-container px-4 text-sm font-normal text-on-primary-container transition-opacity hover:opacity-90"
+                              onClick={() => requestProxy(p)}
+                              className="mt-2 inline-flex min-h-9 w-fit self-start items-center justify-center whitespace-nowrap rounded-full border border-border bg-transparent px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                             >
-                              Mark attendance
-                              <ArrowRight aria-hidden="true" className="size-3.5" />
+                              Request Proxy
                             </button>
                           )}
-                          {(periodState === "done" || periodState === "running") && attendance && (
+                          {canMarkAttendance && attendance && (
                             <span className="mt-1.5 inline-flex items-center gap-1 text-sm font-normal text-icon-accent">
                               <Check aria-hidden="true" className="size-3.5" />
                               {attendance.present}/{attendance.total} present
@@ -351,7 +651,7 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
                   <div className="font-semibold text-base">₹42,500</div>
                 </div>
                 <span className="rounded-full bg-status-soft text-status-foreground text-[12px] font-medium px-2 py-1">
-                  Credited · 1 Oct
+                  <MetaText className="" value="Credited · 1 Oct" />
                 </span>
               </button>
 
@@ -508,7 +808,7 @@ export default function Screen1({ onLogout }: { onLogout: () => void }) {
                   const total = Number(attendanceTotal);
                   const present = Number(attendancePresent);
                   if (!Number.isInteger(total) || total < 1 || !Number.isInteger(present) || present < 0 || present > total) return;
-                  setAttendanceRecords((records) => ({ ...records, [attendanceTarget.period]: { present, total } }));
+                  setAttendanceRecords((records) => ({ ...records, [attendanceTarget.period]: { present, total, markedAt: Date.now() } }));
                   setAttendanceTarget(null);
                 }}
               >

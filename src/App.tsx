@@ -2,6 +2,8 @@ import { useState } from "react";
 import OnboardingFlow from "./OnboardingFlow";
 import Screen1 from "./Screen1";
 
+type TeacherProfile = { fullName: string; email: string };
+
 export default function App() {
   const [hasEnteredApp, setHasEnteredApp] = useState(() => {
     try {
@@ -10,13 +12,26 @@ export default function App() {
       return false;
     }
   });
+  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile>(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem("hawk-teacher-profile") ?? "null") as Partial<TeacherProfile> | null;
+      if (stored && typeof stored.fullName === "string" && stored.fullName.trim()) {
+        return { fullName: stored.fullName, email: typeof stored.email === "string" ? stored.email : "" };
+      }
+    } catch {
+      // Use the demo teacher profile when no saved profile is available.
+    }
+    return { fullName: "Priya Sharma", email: "" };
+  });
 
-  function completeOnboarding() {
+  function completeOnboarding(profile?: TeacherProfile) {
     try {
       window.localStorage.setItem("hawk-onboarding-complete", "true");
+      if (profile) window.localStorage.setItem("hawk-teacher-profile", JSON.stringify(profile));
     } catch {
       // Continue to the teacher workspace for this session if storage is unavailable.
     }
+    if (profile) setTeacherProfile(profile);
     setHasEnteredApp(true);
   }
 
@@ -29,5 +44,5 @@ export default function App() {
     setHasEnteredApp(false);
   }
 
-  return hasEnteredApp ? <Screen1 onLogout={logout} /> : <OnboardingFlow onComplete={completeOnboarding} />;
+  return hasEnteredApp ? <Screen1 onLogout={logout} teacherName={teacherProfile.fullName} /> : <OnboardingFlow onComplete={completeOnboarding} />;
 }

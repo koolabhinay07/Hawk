@@ -3,21 +3,20 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  Check,
   Eye,
   EyeOff,
   Mail,
   ShieldCheck,
 } from "lucide-react";
 
-type FlowScreen = "intro" | "login" | "signup" | "invite" | "forgot" | "forgot-verify" | "reset";
+type FlowScreen = "intro" | "login" | "signup" | "email-verify" | "email-verified" | "invite" | "forgot" | "forgot-verify" | "reset";
 
 const slides = [
   {
     eyebrow: "A better school day starts here",
-    title: "Empower Your School Community",
-    body: "Bring teachers, students, and school communities together in one thoughtful workspace.",
-    points: ["One place for your school", "Built around teachers", "A clearer daily routine"],
+    title: "Your school day, Simplified.",
+    body: "From attendance to results — your whole school day in one place.",
+    points: ["Mark attendance instantly", "Send notices to parents instantly", "Track your class results"],
   },
   {
     eyebrow: "Made to feel natural",
@@ -43,19 +42,19 @@ function OtpFields({ value, onChange, label }: { value: string; onChange: (value
   const refs = useRef<Array<HTMLInputElement | null>>([]);
   const focusAt = (index: number) => refs.current[Math.max(0, Math.min(index, 3))]?.focus();
 
-  function setDigit(index: number, rawValue: string) {
-    const digits = rawValue.replace(/\D/g, "");
-    if (!digits) {
+  function setCharacter(index: number, rawValue: string) {
+    const characters = rawValue.replace(/[^a-z\d]/gi, "").toUpperCase();
+    if (!characters) {
       onChange(value.slice(0, index) + value.slice(index + 1));
       return;
     }
-    if (digits.length > 1) {
-      const pasted = (value.slice(0, index) + digits).slice(0, 4);
+    if (characters.length > 1) {
+      const pasted = (value.slice(0, index) + characters).slice(0, 4);
       onChange(pasted);
       focusAt(Math.min(pasted.length, 3));
       return;
     }
-    const next = (value.slice(0, index) + digits + value.slice(index + 1)).slice(0, 4);
+    const next = (value.slice(0, index) + characters + value.slice(index + 1)).slice(0, 4);
     onChange(next);
     focusAt(Math.min(index + 1, 3));
   }
@@ -68,19 +67,21 @@ function OtpFields({ value, onChange, label }: { value: string; onChange: (value
           <input
             key={index}
             ref={(element) => { refs.current[index] = element; }}
-            aria-label={`${label}, digit ${index + 1}`}
+            aria-label={`${label}, character ${index + 1}`}
             autoComplete={index === 0 ? "one-time-code" : "off"}
-            inputMode="numeric"
+            inputMode="text"
+            autoCapitalize="characters"
+            spellCheck={false}
             maxLength={4}
             value={digit}
-            onChange={(event) => setDigit(index, event.target.value)}
+            onChange={(event) => setCharacter(index, event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Backspace" && !digit && index > 0) focusAt(index - 1);
               if (event.key === "ArrowLeft") focusAt(index - 1);
               if (event.key === "ArrowRight") focusAt(index + 1);
             }}
             onPaste={(event) => {
-              const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
+              const pasted = event.clipboardData.getData("text").replace(/[^a-z\d]/gi, "").toUpperCase().slice(0, 4);
               if (pasted) {
                 event.preventDefault();
                 onChange(pasted);
@@ -95,9 +96,9 @@ function OtpFields({ value, onChange, label }: { value: string; onChange: (value
   );
 }
 
-function Brand({ compact = false }: { compact?: boolean }) {
+function Brand() {
   return (
-    <span className={`font-bold tracking-tight ${compact ? "text-lg" : "text-xl"}`}>Hawk</span>
+    <span className="text-xl font-bold tracking-tight">Hawk</span>
   );
 }
 
@@ -140,7 +141,7 @@ function ShowcasePanel({ screen, slideIndex }: { screen: FlowScreen; slideIndex:
   );
 }
 
-export default function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
+export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: { fullName: string; email: string }) => void }) {
   const [screen, setScreen] = useState<FlowScreen>("intro");
   const [slideIndex, setSlideIndex] = useState(0);
   const [fullName, setFullName] = useState("");
@@ -148,6 +149,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -190,18 +192,26 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
       setError("Those passwords do not match. Please try again.");
       return;
     }
-    setInviteCode("");
-    go("invite");
+    setEmailVerificationCode("");
+    go("email-verify");
+  }
+
+  function submitEmailVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (emailVerificationCode.length !== 4) {
+      setError("Enter the 4-character email verification code.");
+      return;
+    }
+    go("email-verified");
   }
 
   function submitInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (inviteCode.length !== 4) {
-      setError("Enter the 4-digit code from your school administrator.");
+      setError("Enter the 4-character code from your school administrator.");
       return;
     }
-    goLogin();
-    setNotice("Your school code is ready. Log in to continue.");
+    onComplete({ fullName: fullName.trim(), email: email.trim() });
   }
 
   function submitForgot(event: FormEvent<HTMLFormElement>) {
@@ -213,7 +223,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
   function submitVerification(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (verificationCode.length !== 4) {
-      setError("Enter the 4-digit verification code.");
+      setError("Enter the 4-character verification code.");
       return;
     }
     setPassword("");
@@ -237,6 +247,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
 
   const slide = slides[slideIndex];
   const inputClass = "min-h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20";
+  const signupInputClass = inputClass.replace("text-sm", "text-base");
   const filledButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
   const outlinedButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
   const isIntro = screen === "intro";
@@ -248,14 +259,14 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
       <section className="flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto">
         <div className="mx-auto flex w-full max-w-[560px] grow flex-col px-5 py-6 sm:px-10 sm:py-9 lg:px-12 lg:py-10">
           <div className="flex items-center justify-between">
-            <div className="lg:hidden"><Brand compact /></div>
+            <div className="lg:hidden"><Brand /></div>
             <div className="hidden lg:block" />
             {showLoginHeader ? (
               <div className="flex items-center rounded-full bg-muted p-1" role="tablist" aria-label="Account access">
                 <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Log in</button>
                 <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Sign up</button>
               </div>
-            ) : !isIntro ? (
+            ) : !isIntro && screen !== "invite" && screen !== "email-verify" && screen !== "email-verified" ? (
               <button type="button" onClick={goLogin} className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-sm font-semibold text-icon-accent hover:bg-primary-soft"><ArrowLeft className="size-4" />Log in</button>
             ) : <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>}
           </div>
@@ -266,18 +277,29 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                 <p className="mb-2 text-sm font-semibold text-icon-accent">{slide.eyebrow}</p>
                 <h1 className="max-w-xl text-3xl font-bold leading-tight tracking-tight md:text-4xl">{slide.title}</h1>
                 <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
-                <div className="mt-5 flex items-center justify-center gap-2" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
-                  {slides.map((item, index) => <span key={item.title} className={`h-1.5 rounded-full transition-all ${index === slideIndex ? "w-9 bg-primary" : "w-2 bg-border"}`} />)}
+                <div className="mt-5 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
                 </div>
-                <div className="mt-7 rounded-3xl border border-border bg-card p-5 sm:p-6">
-                  <div><p className="text-base font-semibold">A thoughtful workspace for teachers</p><p className="mt-1 text-sm text-muted-foreground">Simple tools, organized around your day.</p></div>
-                  <ul className="mt-5 grid gap-3 sm:grid-cols-3">
-                    {slide.points.map((point) => <li key={point} className="text-sm leading-5 text-muted-foreground">{point}</li>)}
+                {slideIndex === 0 ? (
+                  <ul className="mt-7 grid gap-4">
+                    {slide.points.map((point) => (
+                      <li key={point} className="flex items-start gap-3 text-base leading-6 text-foreground">
+                        <span aria-hidden="true" className="mt-2.5 size-2 shrink-0 rounded-full bg-primary" />
+                        {point}
+                      </li>
+                    ))}
                   </ul>
-                </div>
+                ) : (
+                  <div className="mt-7 rounded-3xl border border-border bg-card p-5 sm:p-6">
+                    <div><p className="text-base font-semibold">A thoughtful workspace for teachers</p><p className="mt-1 text-sm text-muted-foreground">Simple tools, organized around your day.</p></div>
+                    <ul className="mt-5 grid gap-3 sm:grid-cols-3">
+                      {slide.points.map((point) => <li key={point} className="text-sm leading-5 text-muted-foreground">{point}</li>)}
+                    </ul>
+                  </div>
+                )}
                 <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                   {slideIndex < slides.length - 1 ? (
-                    <><button type="button" onClick={goLogin} className="min-h-11 rounded-full px-5 text-sm font-semibold text-muted-foreground hover:bg-muted">Skip</button><button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={filledButton}>Next<ArrowRight className="size-4" /></button></>
+                    <><button type="button" onClick={goLogin} className="min-h-11 rounded-full px-5 text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button><button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={filledButton}>Next<ArrowRight className="size-4" /></button></>
                   ) : (
                     <><button type="button" onClick={() => go("signup")} className={outlinedButton}>Sign up</button><button type="button" onClick={() => go("login")} className={filledButton}>Log in<ArrowRight className="size-4" /></button></>
                   )}
@@ -289,7 +311,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
               <div>
                 <p className="mb-2 text-sm font-semibold text-icon-accent">Welcome back</p>
                 <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Log in to Hawk</h1>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your school account to continue to your teacher workspace.</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your account to continue to your teacher workspace.</p>
                 {notice && <p role="status" className="mt-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   <button type="button" onClick={onComplete} className={outlinedButton}><span aria-hidden="true" className="text-base font-bold">●</span>Login with Apple</button>
@@ -297,51 +319,82 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
                 </div>
                 <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" />Or Continue with Email<span className="h-px grow bg-border" /></div>
                 <form className="grid gap-4" onSubmit={submitLogin}>
-                  <label className="grid gap-2 text-sm font-semibold">Email<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={inputClass} /></label>
-                  <label className="grid gap-2 text-sm font-semibold">Password<span className="relative block"><input type={showPassword ? "text" : "password"} autoComplete="current-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${inputClass} pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></span></label>
-                  <div className="-mt-1 flex justify-end"><button type="button" onClick={() => go("forgot")} className="min-h-9 text-sm font-semibold text-icon-accent hover:underline">Forgot Password?</button></div>
+                  <label className="grid gap-2 text-base font-semibold">Email<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={inputClass} /></label>
+                  <label className="grid gap-2 text-base font-semibold">Password<span className="relative block"><input type={showPassword ? "text" : "password"} autoComplete="current-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${inputClass} pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></span></label>
+                  <div className="-mt-1 flex justify-start"><button type="button" onClick={() => go("forgot")} className="min-h-9 text-sm font-semibold text-icon-accent hover:underline">Forgot Password?</button></div>
                   {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
                   <button type="submit" className={`${filledButton} w-full`}>Login<ArrowRight className="size-4" /></button>
                 </form>
-                <p className="mt-6 text-center text-sm leading-5 text-muted-foreground">Didn't receive a code? Contact your school admin.</p>
               </div>
             )}
 
             {screen === "signup" && (
               <div>
-                <p className="mb-2 text-sm font-semibold text-icon-accent">Create your teacher account</p>
+                <p className="mb-2 text-base font-semibold text-icon-accent">Create your teacher account</p>
                 <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Sign up for Hawk</h1>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your school email to get started.</p>
                 <form className="mt-6 grid gap-4" onSubmit={submitSignup}>
-                  <label className="grid gap-2 text-sm font-semibold">Your full name<input autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Your full name" className={inputClass} /></label>
-                  <label className="grid gap-2 text-sm font-semibold">Email<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={inputClass} /></label>
-                  <label className="grid gap-2 text-sm font-semibold">Password<span className="relative block"><input type={showPassword ? "text" : "password"} autoComplete="new-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Create a password" className={`${inputClass} pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></span></label>
-                  <ul aria-label="Password requirements" className="grid gap-2 rounded-2xl bg-muted p-4">
+                  <label className="grid gap-2 text-base font-semibold">Your full name<input autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Your full name" className={signupInputClass} /></label>
+                  <label className="grid gap-2 text-base font-semibold">Email<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={signupInputClass} /></label>
+                  <label className="grid gap-2 text-base font-semibold">Password<span className="relative block"><input type={showPassword ? "text" : "password"} autoComplete="new-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Create a password" className={`${signupInputClass} pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></span></label>
+                  <ul aria-label="Password requirements" aria-live="polite" className="-mt-2 grid gap-1">
                     {passwordRules.map((rule) => {
                       const met = rule.test(password);
-                      return <li key={rule.label} className={`flex items-center gap-2 text-sm ${met ? "text-icon-accent" : "text-muted-foreground"}`}><span aria-hidden="true" className={`flex size-4 items-center justify-center rounded border ${met ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50"}`}>{met && <Check className="size-3" />}</span>{rule.label}</li>;
+                      const conditionColor = met ? "text-icon-accent" : password.length > 0 ? "text-[#A85757]" : "text-muted-foreground";
+                      const bulletColor = met ? "bg-primary" : password.length > 0 ? "bg-[#A85757]" : "bg-muted-foreground";
+                      return <li key={rule.label} aria-label={`${rule.label}: ${met ? "met" : "not met"}`} className={`flex items-center gap-2 text-sm ${conditionColor}`}><span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${bulletColor}`} />{rule.label}</li>;
                     })}
                   </ul>
-                  <label className="grid gap-2 text-sm font-semibold">Confirm your password<span className="relative block"><input type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Confirm your password" className={`${inputClass} pr-12`} /><button type="button" aria-label={showConfirmPassword ? "Hide password" : "Show password"} onClick={() => setShowConfirmPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></span></label>
+                  <label className="grid gap-2 text-base font-semibold">Confirm your password<span className="relative block"><input type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Confirm your password" className={`${signupInputClass} pr-12`} /><button type="button" aria-label={showConfirmPassword ? "Hide password" : "Show password"} onClick={() => setShowConfirmPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></span></label>
                   {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
                   <button type="submit" className={`${filledButton} w-full`}>Sign up<ArrowRight className="size-4" /></button>
+                  <button type="button" onClick={goLogin} className="min-h-10 w-full rounded-full text-sm font-semibold text-muted-foreground hover:bg-muted">Cancel</button>
                 </form>
-                <p className="mt-5 text-center text-sm leading-5 text-muted-foreground">By signing up, you agree to our <span className="font-semibold text-icon-accent">Terms of Service</span> and <span className="font-semibold text-icon-accent">Privacy Policy</span>.</p>
-                <button type="button" onClick={goLogin} className="mt-3 min-h-10 w-full rounded-full text-sm font-semibold text-muted-foreground hover:bg-muted">Cancel</button>
+                <p className="mt-2 text-center text-sm leading-5 text-muted-foreground">By signing up, you agree to our <span className="font-semibold text-icon-accent">Terms of Service</span> and <span className="font-semibold text-icon-accent">Privacy Policy</span>.</p>
+              </div>
+            )}
+
+            {screen === "email-verify" && (
+              <div className="-translate-y-4">
+                <span className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-primary-soft text-icon-accent"><Mail className="size-10" /></span>
+                <p className="mb-2 text-sm font-semibold text-icon-accent">Verify your account</p>
+                <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Verify your email</h1>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">Enter the 4-character code sent to <span className="font-semibold text-foreground">{email}</span>.</p>
+                <form className="mt-7 grid gap-6" onSubmit={submitEmailVerification}>
+                  <OtpFields value={emailVerificationCode} onChange={setEmailVerificationCode} label="Email verification code" />
+                  {error && <p role="alert" className="text-center text-sm text-accent-foreground">{error}</p>}
+                  <div className="grid gap-3">
+                    <button type="submit" disabled={emailVerificationCode.length !== 4} className={`${filledButton} w-full`}>Verify email<ArrowRight className="size-4" /></button>
+                    <button type="button" onClick={goLogin} className={`${outlinedButton} w-full`}>Back to Login</button>
+                  </div>
+                  <button type="button" onClick={() => { setEmailVerificationCode(""); setNotice("A new email verification code is ready."); }} className="min-h-9 text-sm font-semibold text-icon-accent hover:underline">Didn't receive a code? Resend</button>
+                  {notice && <p role="status" className="-mt-5 text-center text-sm text-icon-accent">{notice}</p>}
+                </form>
+              </div>
+            )}
+
+            {screen === "email-verified" && (
+              <div className="-translate-y-4">
+                <span className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-primary-soft text-icon-accent"><ShieldCheck className="size-10" /></span>
+                <p className="mb-2 text-sm font-semibold text-icon-accent">Email confirmed</p>
+                <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Your email is verified</h1>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground"><span className="font-semibold text-foreground">{email}</span> is ready to use with your Hawk account.</p>
+                <button type="button" onClick={() => { setInviteCode(""); go("invite"); }} className={`${filledButton} mt-7 w-full`}>Next<ArrowRight className="size-4" /></button>
               </div>
             )}
 
             {screen === "invite" && (
-              <div>
-                <span className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-primary-soft text-icon-accent"><ShieldCheck className="size-6" /></span>
+              <div className="-translate-y-4">
+                <span className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-primary-soft text-icon-accent"><ShieldCheck className="size-10" /></span>
                 <p className="mb-2 text-sm font-semibold text-icon-accent">Connect your school</p>
                 <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">School invite code</h1>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">Enter the 4-digit invite code provided by your school admin.</p>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">Enter the 4-character invite code provided by your school admin.</p>
                 <form className="mt-7 grid gap-6" onSubmit={submitInvite}>
                   <OtpFields value={inviteCode} onChange={setInviteCode} label="School invite code" />
                   {error && <p role="alert" className="text-center text-sm text-accent-foreground">{error}</p>}
-                  <button type="submit" disabled={inviteCode.length !== 4} className={`${filledButton} w-full`}>Verify Now<ArrowRight className="size-4" /></button>
-                  <button type="button" onClick={goLogin} className={`${outlinedButton} w-full`}>Cancel</button>
+                  <div className="grid gap-3">
+                    <button type="submit" disabled={inviteCode.length !== 4} className={`${filledButton} w-full`}>Verify Now<ArrowRight className="size-4" /></button>
+                    <button type="button" onClick={goLogin} className={`${outlinedButton} w-full`}>Cancel</button>
+                  </div>
                 </form>
               </div>
             )}
@@ -395,9 +448,6 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
             )}
           </div>
 
-          <footer className="pt-4 text-center text-sm leading-5 text-muted-foreground">
-            <span>© 2026 Hawk</span><span className="mx-2">·</span><span>Teacher workspace</span>
-          </footer>
         </div>
       </section>
     </main>
