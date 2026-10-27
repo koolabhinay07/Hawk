@@ -353,13 +353,16 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
       : activePeriodConducted
         ? "Conducted"
         : "Ongoing";
+  const gracePeriodStatus = periodStatuses
+    .filter(({ state }) => state === "grace")
+    .sort((a, b) => b.period.startMinute - a.period.startMinute)[0];
   const nextUpcomingPeriod = effectiveTimetable.find((period) => period.startMinute > scheduleMinute);
   const recentlyMarkedPeriod = !activePeriod
     ? effectiveTimetable
         .filter((period) => getPeriodState(period, scheduleMinute) === "grace" && visibleAttendanceRecords[period.period])
         .sort((a, b) => b.startMinute - a.startMinute)[0]
     : undefined;
-  const heroPeriod = activePeriod ?? recentlyMarkedPeriod ?? nextUpcomingPeriod ?? effectiveTimetable[effectiveTimetable.length - 1];
+  const heroPeriod = activePeriod ?? gracePeriodStatus?.period ?? recentlyMarkedPeriod ?? nextUpcomingPeriod ?? effectiveTimetable[effectiveTimetable.length - 1];
   const cancelableProxyRequestPeriod = effectiveTimetable.find((period) =>
     getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute) === "pending",
   );
@@ -821,7 +824,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <section data-ai-obstacle className={`rounded-[28px] p-5 md:p-6 ${dayComplete ? "border border-border bg-card text-foreground" : "bg-primary-container text-on-primary-container"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    {allPeriodsEnded ? (
+                    {allPeriodsEnded && !gracePeriodStatus ? (
                       <>
                         <h2 className="text-xl font-semibold tracking-tight">No more classes today</h2>
                         <p className="mt-2 text-sm font-normal text-on-primary-container/80">View timetable for more info</p>
@@ -877,6 +880,27 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                           <>
                             <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period} {activePeriod.subject}</h2>
                             <MetaText className="text-sm text-on-primary-container/80" value={activePeriod.details} />
+                          </>
+                        )}
+                      </>
+                    ) : gracePeriodStatus ? (
+                      <>
+                        <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
+                          {gracePeriodStatus.attendance || gracePeriodStatus.isConducted
+                            ? <CheckCheck aria-hidden="true" className="size-3.5" />
+                            : <Clock aria-hidden="true" className="size-3.5" />}
+                          {gracePeriodStatus.attendance ? "Attendance marked" : gracePeriodStatus.isConducted ? "Conducted" : "Grace period"}
+                        </div>
+                        {gracePeriodStatus.period.isOwnClass ? (
+                          <>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period} {gracePeriodStatus.period.subject}</h2>
+                            <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
+                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(gracePeriodStatus.period)} />
+                          </>
+                        ) : (
+                          <>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period} {gracePeriodStatus.period.subject}</h2>
+                            <MetaText className="text-sm text-on-primary-container/80" value={gracePeriodStatus.period.details} />
                           </>
                         )}
                       </>
@@ -948,6 +972,22 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark as Conducted
+                  </button>
+                ) : gracePeriodStatus && gracePeriodStatus.canMarkAttendance && !gracePeriodStatus.attendance ? (
+                  <button
+                    type="button"
+                    onClick={() => openAttendance(gracePeriodStatus.period)}
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                  >
+                    Mark Attendance
+                  </button>
+                ) : gracePeriodStatus && !gracePeriodStatus.canMarkAttendance && !gracePeriodStatus.isConducted ? (
+                  <button
+                    type="button"
+                    onClick={() => setConductedPeriods((periods) => ({ ...periods, [gracePeriodStatus.period.period]: Date.now() }))}
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#d6ae3b] bg-[#fff8e1] px-5 text-base font-semibold text-[#6b4f00] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Mark class as conducted?
                   </button>
                 ) : null}
                 {!dayComplete && cancelableProxyRequestPeriod && (
