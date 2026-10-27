@@ -251,8 +251,9 @@ function isMissedPeriod(
   periodState: ReturnType<typeof getPeriodState>,
   attendance: AttendanceRecord | undefined,
   canMarkAttendance: boolean,
+  isConducted: boolean,
 ) {
-  return canMarkAttendance && !attendance && periodState === "done";
+  return !attendance && periodState === "done" && (canMarkAttendance || !isConducted);
 }
 
 function getOwnClassSummary(period: TimetablePeriod) {
@@ -338,7 +339,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     const isConducted = isPeriodConducted(period, conductedPeriods, attendanceDateKey, scheduleMinute);
     const isSelfConducted = proxyRequestStatus === "expired" && isConducted && !period.isProxy;
     const isRequestExpired = proxyRequestStatus === "expired" && !isConducted && state !== "done";
-    const isMissed = isMissedPeriod(state, attendance, canMarkAttendance);
+    const isMissed = isMissedPeriod(state, attendance, canMarkAttendance, isConducted);
     const isAttendancePending = canMarkAttendance && !attendance && state === "grace";
     return { period, attendance, state, canMarkAttendance, proxyRequestStatus, isConducted, isSelfConducted, isRequestExpired, isMissed, isAttendancePending };
   });
@@ -354,7 +355,9 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
         ? "Conducted"
         : "Ongoing";
   const gracePeriodStatus = periodStatuses
-    .filter(({ state }) => state === "grace")
+    .filter(({ state, canMarkAttendance, attendance, isConducted }) =>
+      state === "grace" && ((canMarkAttendance && !attendance) || (!canMarkAttendance && !isConducted)),
+    )
     .sort((a, b) => b.period.startMinute - a.period.startMinute)[0];
   const nextUpcomingPeriod = effectiveTimetable.find((period) => period.startMinute > scheduleMinute);
   const recentlyMarkedPeriod = !activePeriod
@@ -362,7 +365,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
         .filter((period) => getPeriodState(period, scheduleMinute) === "grace" && visibleAttendanceRecords[period.period])
         .sort((a, b) => b.startMinute - a.startMinute)[0]
     : undefined;
-  const heroPeriod = activePeriod ?? gracePeriodStatus?.period ?? recentlyMarkedPeriod ?? nextUpcomingPeriod ?? effectiveTimetable[effectiveTimetable.length - 1];
+  const heroPeriod = activePeriod ?? gracePeriodStatus?.period ?? nextUpcomingPeriod ?? recentlyMarkedPeriod ?? effectiveTimetable[effectiveTimetable.length - 1];
   const cancelableProxyRequestPeriod = effectiveTimetable.find((period) =>
     getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute) === "pending",
   );
@@ -872,13 +875,13 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                         </div>
                         {activePeriod.isOwnClass ? (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period} {activePeriod.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{activePeriod.subject}</h2>
                             <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
                             <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(activePeriod)} />
                           </>
                         ) : (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period} {activePeriod.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{activePeriod.subject}</h2>
                             <MetaText className="text-sm text-on-primary-container/80" value={activePeriod.details} />
                           </>
                         )}
@@ -893,13 +896,13 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                         </div>
                         {gracePeriodStatus.period.isOwnClass ? (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period} {gracePeriodStatus.period.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{gracePeriodStatus.period.subject}</h2>
                             <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
                             <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(gracePeriodStatus.period)} />
                           </>
                         ) : (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period} {gracePeriodStatus.period.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{gracePeriodStatus.period.subject}</h2>
                             <MetaText className="text-sm text-on-primary-container/80" value={gracePeriodStatus.period.details} />
                           </>
                         )}
@@ -914,13 +917,13 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                         </div>
                         {heroPeriod.isOwnClass ? (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period} {heroPeriod.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{heroPeriod.subject}</h2>
                             <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
                             <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(heroPeriod)} />
                           </>
                         ) : (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period} · {heroPeriod.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{heroPeriod.subject}</h2>
                             <MetaText className="text-sm text-on-primary-container/80" value={heroPeriod.details} />
                           </>
                         )}
