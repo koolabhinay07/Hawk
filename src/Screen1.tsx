@@ -652,9 +652,9 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       </>
                     ) : null}
                   </div>
-                  {!dayComplete && activePeriod && !activePeriodConducted && (
+                  {!dayComplete && activePeriod && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
-                      Now
+                      {activePeriodConducted ? "Conducted" : "Now"}
                     </span>
                   )}
                 </div>
@@ -760,7 +760,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                             {(p.isProxy || isAttendancePending || isMissed || (!canMarkAttendance && isConducted) || proxyRequestStatus === "pending" || isRequestExpired || isSelfConducted || isProxyAccepted) && (
                               <span className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap ${p.isProxy ? "" : "basis-full md:basis-auto"} ${isPastPeriod ? "opacity-85" : ""}`}>
                                 {p.isProxy && !isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
-                                {proxyRequestStatus === "pending" && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Pending</span>}
+                                {proxyRequestStatus === "pending" && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Proxy pending</span>}
                                 {isRequestExpired && <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Request Expired</span>}
                                 {isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
                                 {isAttendancePending && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Attendance pending</span>}
