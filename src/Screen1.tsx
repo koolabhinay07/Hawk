@@ -829,8 +829,9 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <div className="min-w-0">
                     {allPeriodsEnded && !gracePeriodStatus ? (
                       <>
-                        <h2 className="text-xl font-semibold tracking-tight">No more classes today</h2>
-                        <p className="mt-2 text-sm font-normal text-on-primary-container/80">View timetable for more info</p>
+                        <h2 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+                          No more classes<br className="sm:hidden" /> today
+                        </h2>
                         {dayComplete && (
                           <>
                             <p className="mt-3 flex items-center text-sm text-muted-foreground">
