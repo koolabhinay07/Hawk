@@ -10,8 +10,8 @@ export type TimetablePeriod = {
   isOwnClass?: boolean;
 };
 
-export type AttendanceRecord = { present: number; total: number; markedAt?: number };
-export type PeriodState = "upcoming" | "running" | "grace" | "done" | "missed";
+export type AttendanceRecord = { marked?: true; present: number; total: number; markedAt?: number; periodStartMinute?: number };
+export type PeriodState = "upcoming" | "running" | "grace" | "done";
 export type ClosedDayConfig = {
   /** JavaScript weekday numbers: Sunday = 0 through Saturday = 6. */
   closedWeekdays: number[];
@@ -29,11 +29,11 @@ export const allowRetroactiveMarking = true;
 export const attendanceGraceMinutes = 15;
 
 export const timetable: TimetablePeriod[] = [
-  { period: "P1", time: "4:45–5:15 PM", startMinute: 1005, endMinute: 1035, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
-  { period: "P2", time: "5:30–6:00 PM", startMinute: 1050, endMinute: 1080, subject: "Science", details: "Class 7-A · Covering for Mr. Verma", isProxy: true },
-  { period: "P3", time: "6:15–6:45 PM", startMinute: 1095, endMinute: 1125, subject: "Mathematics", details: "Class 9-A · 40 students", students: 40 },
-  { period: "P4", time: "7:00–7:30 PM", startMinute: 1140, endMinute: 1170, subject: "Mathematics", details: "Class 8-A · 41 students", students: 41 },
-  { period: "P5", time: "7:45–8:15 PM", startMinute: 1185, endMinute: 1215, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
+  { period: "P1", time: "8:00–8:10 PM", startMinute: 1200, endMinute: 1210, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
+  { period: "P2", time: "8:13–8:23 PM", startMinute: 1213, endMinute: 1223, subject: "Science", details: "Class 7-A · Covering for Mr. Verma", isProxy: true },
+  { period: "P3", time: "8:26–8:36 PM", startMinute: 1226, endMinute: 1236, subject: "Mathematics", details: "Class 9-A · 40 students", students: 40 },
+  { period: "P4", time: "8:39–8:49 PM", startMinute: 1239, endMinute: 1249, subject: "Mathematics", details: "Class 8-A · 41 students", students: 41 },
+  { period: "P5", time: "8:52–9:02 PM", startMinute: 1252, endMinute: 1262, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
 ];
 
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -87,12 +87,11 @@ export function getScheduleMinute(now: Date) {
 export function getPeriodState(
   period: TimetablePeriod,
   scheduleMinute: number,
-  attendance?: AttendanceRecord,
 ): PeriodState {
   if (scheduleMinute < period.startMinute) return "upcoming";
-  if (scheduleMinute < period.endMinute) return attendance ? "done" : "running";
-  if (scheduleMinute < period.endMinute + attendanceGraceMinutes) return attendance ? "done" : "grace";
-  return attendance ? "done" : "missed";
+  if (scheduleMinute < period.endMinute) return "running";
+  if (scheduleMinute < period.endMinute + attendanceGraceMinutes) return "grace";
+  return "done";
 }
 
 export function hasAttendanceRights(period: TimetablePeriod, proxyRights: boolean) {
@@ -106,6 +105,7 @@ export type TodaysAttendanceSummary = {
   eligibleForRetroactiveMarkingCount: number;
   notEligibleForRetroactiveMarkingCount: number;
   pendingOwnClassCount: number;
+  pendingAttendanceCount: number;
   dayComplete: boolean;
   headerCount: number;
   headerLabel: "attendance pending" | "missed";
@@ -124,17 +124,20 @@ export function getTodaysAttendanceSummary(
   const periodStatuses = periods.map((period) => ({
     period,
     attendance: records[period.period],
-    state: getPeriodState(period, scheduleMinute, records[period.period]),
+    state: getPeriodState(period, scheduleMinute),
   }));
   const unmarkedOwnClassPeriods = periodStatuses
     .filter(({ period, attendance }) => period.isOwnClass && !attendance)
     .map(({ period }) => period);
   const missedPeriods = periodStatuses
-    .filter(({ period, state }) => state === "missed" && hasAttendanceRights(period, proxyRights))
+    .filter(({ period, attendance, state }) => state === "done" && !attendance && hasAttendanceRights(period, proxyRights))
     .map(({ period }) => period);
   const retroactiveEligiblePeriods = missedPeriods.filter((period) => hasAttendanceRights(period, proxyRights));
-  const pendingOwnClassCount = periodStatuses.filter(({ period, attendance, state }) =>
-    period.isOwnClass && !attendance && state !== "missed",
+  const pendingOwnClassCount = periodStatuses.filter(({ period, attendance }) =>
+    period.isOwnClass && !attendance,
+  ).length;
+  const pendingAttendanceCount = periodStatuses.filter(({ period, attendance }) =>
+    hasAttendanceRights(period, proxyRights) && !attendance,
   ).length;
   const markedCount = periodStatuses.filter(({ attendance }) => Boolean(attendance)).length;
   const lastPeriodEnd = periods.reduce((latestEnd, period) => Math.max(latestEnd, period.endMinute), 0);
@@ -148,6 +151,7 @@ export function getTodaysAttendanceSummary(
     eligibleForRetroactiveMarkingCount: retroactiveEligiblePeriods.length,
     notEligibleForRetroactiveMarkingCount: missedPeriods.length - retroactiveEligiblePeriods.length,
     pendingOwnClassCount,
+    pendingAttendanceCount,
     dayComplete,
     headerCount: dayComplete ? missedPeriods.length : pendingOwnClassCount,
     headerLabel,

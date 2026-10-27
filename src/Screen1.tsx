@@ -4,6 +4,7 @@ import {
   Bell,
   BookOpen,
   Check,
+  CheckCheck,
   ClipboardCheck,
   Clock,
   FileText,
@@ -20,7 +21,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { allowRetroactiveMarking, getNextWorkingDay, getPeriodState, getScheduleMinute, getTodaysAttendanceSummary, hasAttendanceRights, schoolClosedDays, timetable, type AttendanceRecord, type TimetablePeriod } from "./timetable";
+import { allowRetroactiveMarking, getNextWorkingDay, getPeriodState, getScheduleMinute, getTodaysAttendanceSummary, hasAttendanceRights, schoolClosedDays, timetable as defaultTimetable, type AttendanceRecord, type TimetablePeriod } from "./timetable";
 
 const quickActions = [
   { icon: ClipboardCheck, label: "Attendance" },
@@ -36,8 +37,6 @@ const navItems = [
   { icon: GraduationCap, label: "Academics" },
   { icon: User, label: "Profile" },
 ];
-
-const firstScheduledPeriod = [...timetable].sort((a, b) => a.startMinute - b.startMinute)[0];
 
 function MetaText({ value, className }: { value: string; className: string }) {
   return (
@@ -65,32 +64,80 @@ function getAttendanceDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function loadAttendanceRecords(dateKey: string): Record<string, AttendanceRecord> {
+function getAttendanceRecordKey(period: TimetablePeriod) {
+  return `${period.period}:${period.startMinute}`;
+}
+
+function formatScheduleTime(minute: number) {
+  const hour24 = Math.floor(minute / 60);
+  const minutePart = minute % 60;
+  const hour12 = hour24 % 12 || 12;
+  const meridiem = hour24 < 12 ? "AM" : "PM";
+  return `${hour12}:${String(minutePart).padStart(2, "0")} ${meridiem}`;
+}
+
+function formatPeriodTime(startMinute: number, endMinute: number) {
+  const start = formatScheduleTime(startMinute);
+  const end = formatScheduleTime(endMinute);
+  const startMeridiem = start.slice(-2);
+  const endMeridiem = end.slice(-2);
+  return startMeridiem === endMeridiem
+    ? `${start.slice(0, -3)}–${end}`
+    : `${start}–${end}`;
+}
+
+function buildResetTimetable(periods: TimetablePeriod[], firstStartMinute: number) {
+  const endOfDayMinute = 1439;
+  return periods.map((period, index) => {
+    const startMinute = Math.min(firstStartMinute + index * 13, endOfDayMinute);
+    const endMinute = Math.min(firstStartMinute + index * 13 + 10, endOfDayMinute);
+    return { ...period, startMinute, endMinute, time: formatPeriodTime(startMinute, endMinute) };
+  });
+}
+
+function loadTimetable(dateKey: string): TimetablePeriod[] {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(`hawk-timetable-v2:${dateKey}`) ?? "null");
+    if (!Array.isArray(parsed) || parsed.length !== defaultTimetable.length) return defaultTimetable;
+    const storedPeriods = parsed as Partial<TimetablePeriod>[];
+    const periods = defaultTimetable.map((period) => {
+      const stored = storedPeriods.find((item) => item.period === period.period);
+      if (!stored || !Number.isInteger(stored.startMinute) || !Number.isInteger(stored.endMinute) ||
+        (stored.startMinute as number) < 0 || (stored.endMinute as number) < (stored.startMinute as number) ||
+        (stored.endMinute as number) > 1440 || typeof stored.time !== "string") return null;
+      return { ...period, startMinute: stored.startMinute as number, endMinute: stored.endMinute as number, time: stored.time };
+    });
+    return periods.every((period): period is TimetablePeriod => period !== null) ? periods : defaultTimetable;
+  } catch {
+    return defaultTimetable;
+  }
+}
+
+function loadAttendanceRecords(dateKey: string, periods: TimetablePeriod[]): Record<string, AttendanceRecord> {
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(`hawk-attendance-records:${dateKey}`) ?? "{}");
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-    return Object.fromEntries(Object.entries(parsed).filter(([periodId, value]) => {
-      if (!timetable.some((period) => period.period === periodId) || !value || typeof value !== "object") return false;
+    return Object.fromEntries(Object.entries(parsed).flatMap(([recordKey, value]) => {
+      if (!value || typeof value !== "object") return [];
+      const period = periods.find((item) => getAttendanceRecordKey(item) === recordKey);
       const record = value as Partial<AttendanceRecord>;
-      const period = timetable.find((item) => item.period === periodId);
-      if (!period || !Number.isFinite(record.markedAt)) return false;
+      if (!period || record.marked !== true || record.periodStartMinute !== period.startMinute || !Number.isFinite(record.markedAt)) return [];
       const markedAt = new Date(record.markedAt as number);
-      if (getAttendanceDateKey(markedAt) !== dateKey || getScheduleMinute(markedAt) < period.startMinute) return false;
-      return Number.isInteger(record.present) && Number.isInteger(record.total) &&
-        (record.present ?? -1) >= 0 && (record.total ?? 0) > 0 &&
-        (record.present ?? Infinity) <= (record.total ?? -1);
-    })) as Record<string, AttendanceRecord>;
+      if (getAttendanceDateKey(markedAt) !== dateKey || getScheduleMinute(markedAt) < period.startMinute) return [];
+      if (!Number.isInteger(record.present) || !Number.isInteger(record.total) || (record.present ?? -1) < 0 || (record.total ?? 0) < 1 || (record.present ?? Infinity) > (record.total ?? -1)) return [];
+      return [[period.period, record as AttendanceRecord]];
+    }));
   } catch {
     return {};
   }
 }
 
-function loadConductedPeriods(dateKey: string): Record<string, number> {
+function loadConductedPeriods(dateKey: string, periods: TimetablePeriod[]): Record<string, number> {
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(`hawk-conducted-periods:${dateKey}`) ?? "{}");
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
     return Object.fromEntries(Object.entries(parsed).filter(([periodId, value]) => {
-      const period = timetable.find((item) => item.period === periodId);
+      const period = periods.find((item) => item.period === periodId);
       if (!period || typeof value !== "number" || !Number.isFinite(value)) return false;
       const conductedAt = new Date(value);
       return getAttendanceDateKey(conductedAt) === dateKey && getScheduleMinute(conductedAt) >= period.startMinute;
@@ -114,12 +161,12 @@ type ProxyRequest = {
   coveringTeacherName?: string;
 };
 
-function parseProxyRequests(raw: string | null): Record<string, ProxyRequest> {
+function parseProxyRequests(raw: string | null, periods: TimetablePeriod[]): Record<string, ProxyRequest> {
   try {
     const parsed: unknown = JSON.parse(raw ?? "{}");
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
     return Object.fromEntries(Object.entries(parsed).filter(([periodId, value]) => {
-      if (!timetable.some((period) => period.period === periodId) || !value || typeof value !== "object") return false;
+      if (!periods.some((period) => period.period === periodId) || !value || typeof value !== "object") return false;
       const request = value as Partial<ProxyRequest>;
       return request.status === "pending" || request.status === "accepted" || request.status === "expired";
     }).map(([periodId, value]) => [periodId, {
@@ -133,9 +180,9 @@ function parseProxyRequests(raw: string | null): Record<string, ProxyRequest> {
   }
 }
 
-function loadProxyRequests(dateKey: string) {
+function loadProxyRequests(dateKey: string, periods: TimetablePeriod[]) {
   try {
-    return parseProxyRequests(window.localStorage.getItem(`hawk-proxy-requests:${dateKey}`));
+    return parseProxyRequests(window.localStorage.getItem(`hawk-proxy-requests:${dateKey}`), periods);
   } catch {
     return {};
   }
@@ -143,14 +190,24 @@ function loadProxyRequests(dateKey: string) {
 
 function getProxyRequestStatus(request: ProxyRequest | undefined, period: TimetablePeriod, dateKey: string, scheduleMinute: number) {
   if (!request) return undefined;
-  if (request.status === "expired") return "expired" as const;
+  if (!Number.isFinite(request.requestedAt)) return undefined;
+  const requestedAt = new Date(request.requestedAt as number);
+  if (getAttendanceDateKey(requestedAt) !== dateKey || getScheduleMinute(requestedAt) >= period.startMinute) return undefined;
+  if (request.status === "expired") return scheduleMinute >= period.startMinute ? "expired" as const : undefined;
   if (request.status === "accepted") {
     if (request.acceptedAt === undefined) return scheduleMinute >= period.startMinute ? "expired" as const : "accepted" as const;
     const acceptedAt = new Date(request.acceptedAt);
-    if (getAttendanceDateKey(acceptedAt) !== dateKey || getScheduleMinute(acceptedAt) >= period.startMinute) return "expired" as const;
+    if (getAttendanceDateKey(acceptedAt) !== dateKey || getScheduleMinute(acceptedAt) >= period.startMinute) {
+      return scheduleMinute >= period.startMinute ? "expired" as const : undefined;
+    }
     return "accepted" as const;
   }
   return scheduleMinute >= period.startMinute ? "expired" as const : "pending" as const;
+}
+
+function getOwnClassSummary(period: TimetablePeriod) {
+  const className = period.details.split(" · ")[0].replace(/-(?=[A-Z])/g, " ");
+  return period.students === undefined ? period.details : `${className} · ${period.students} students`;
 }
 
 export default function Screen1({ onLogout, teacherName }: { onLogout: () => void; teacherName: string }) {
@@ -167,13 +224,16 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   });
   const [clock, setClock] = useState(() => new Date());
   const attendanceDateKey = getAttendanceDateKey(clock);
-  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord>>(() => loadAttendanceRecords(attendanceDateKey));
+  const [timetable, setTimetable] = useState<TimetablePeriod[]>(() => loadTimetable(attendanceDateKey));
+  const [loadedTimetableDateKey, setLoadedTimetableDateKey] = useState(attendanceDateKey);
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord>>(() => loadAttendanceRecords(attendanceDateKey, timetable));
   const [loadedAttendanceDateKey, setLoadedAttendanceDateKey] = useState(attendanceDateKey);
-  const [conductedPeriods, setConductedPeriods] = useState<Record<string, number>>(() => loadConductedPeriods(attendanceDateKey));
+  const [conductedPeriods, setConductedPeriods] = useState<Record<string, number>>(() => loadConductedPeriods(attendanceDateKey, timetable));
   const [loadedConductedDateKey, setLoadedConductedDateKey] = useState(attendanceDateKey);
-  const [proxyRequests, setProxyRequests] = useState<Record<string, ProxyRequest>>(() => loadProxyRequests(attendanceDateKey));
+  const [proxyRequests, setProxyRequests] = useState<Record<string, ProxyRequest>>(() => loadProxyRequests(attendanceDateKey, timetable));
   const [loadedProxyDateKey, setLoadedProxyDateKey] = useState(attendanceDateKey);
   const [proxyNotification, setProxyNotification] = useState("");
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [proxyAttendanceRights] = useState(() => {
     try {
       return window.localStorage.getItem("hawk-proxy-attendance-rights") === "true";
@@ -185,16 +245,28 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const [attendanceTotal, setAttendanceTotal] = useState("");
   const [attendancePresent, setAttendancePresent] = useState("");
   const scheduleMinute = getScheduleMinute(clock);
+  const firstScheduledPeriod = [...timetable].sort((a, b) => a.startMinute - b.startMinute)[0];
+  const visibleAttendanceRecords = Object.fromEntries(Object.entries(attendanceRecords).filter(([periodId]) => {
+    const period = timetable.find((item) => item.period === periodId);
+    return period !== undefined && scheduleMinute >= period.startMinute;
+  }));
   const activePeriodIndex = timetable.findIndex((period) => scheduleMinute >= period.startMinute && scheduleMinute < period.endMinute);
   const activePeriod = activePeriodIndex >= 0 ? timetable[activePeriodIndex] : undefined;
-  const activePeriodAttendance = activePeriod ? attendanceRecords[activePeriod.period] : undefined;
+  const activePeriodAttendance = activePeriod ? visibleAttendanceRecords[activePeriod.period] : undefined;
   const activePeriodConducted = activePeriod ? isPeriodConducted(activePeriod, conductedPeriods, attendanceDateKey, scheduleMinute) : false;
+  const activePeriodLabel = activePeriodAttendance
+    ? "Attendance marked"
+    : activePeriod?.period === "P1"
+      ? "Attendance pending"
+      : activePeriodConducted
+        ? "Conducted"
+        : "Ongoing";
   const nextUpcomingPeriod = timetable.find((period) => period.startMinute > scheduleMinute);
   const heroPeriod = activePeriod ?? nextUpcomingPeriod ?? timetable[timetable.length - 1];
   const cancelableProxyRequestPeriod = timetable.find((period) =>
     getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute) === "pending",
   );
-  const attendanceSummary = getTodaysAttendanceSummary(timetable, scheduleMinute, attendanceRecords, proxyAttendanceRights);
+  const attendanceSummary = getTodaysAttendanceSummary(timetable, scheduleMinute, visibleAttendanceRecords, proxyAttendanceRights);
   const { dayComplete } = attendanceSummary;
   const nextWorkingDay = getNextWorkingDay(clock, schoolClosedDays);
   const dashboardDate = new Intl.DateTimeFormat("en-IN", {
@@ -205,6 +277,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   }).format(clock);
   const mainContentRef = useRef<HTMLElement>(null);
   const attendanceDialogRef = useRef<HTMLDialogElement>(null);
+  const resetDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setClock(new Date()), 15_000);
@@ -212,22 +285,17 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   }, []);
 
   useEffect(() => {
-    if (loadedAttendanceDateKey === attendanceDateKey) return;
-    setAttendanceRecords(loadAttendanceRecords(attendanceDateKey));
+    if (loadedTimetableDateKey === attendanceDateKey) return;
+    const nextTimetable = loadTimetable(attendanceDateKey);
+    setTimetable(nextTimetable);
+    setAttendanceRecords(loadAttendanceRecords(attendanceDateKey, nextTimetable));
+    setConductedPeriods(loadConductedPeriods(attendanceDateKey, nextTimetable));
+    setProxyRequests(loadProxyRequests(attendanceDateKey, nextTimetable));
+    setLoadedTimetableDateKey(attendanceDateKey);
     setLoadedAttendanceDateKey(attendanceDateKey);
-  }, [attendanceDateKey, loadedAttendanceDateKey]);
-
-  useEffect(() => {
-    if (loadedConductedDateKey === attendanceDateKey) return;
-    setConductedPeriods(loadConductedPeriods(attendanceDateKey));
     setLoadedConductedDateKey(attendanceDateKey);
-  }, [attendanceDateKey, loadedConductedDateKey]);
-
-  useEffect(() => {
-    if (loadedProxyDateKey === attendanceDateKey) return;
-    setProxyRequests(loadProxyRequests(attendanceDateKey));
     setLoadedProxyDateKey(attendanceDateKey);
-  }, [attendanceDateKey, loadedProxyDateKey]);
+  }, [attendanceDateKey, loadedTimetableDateKey]);
 
   useEffect(() => {
     setProxyRequests((requests) => {
@@ -241,7 +309,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
       }
       return changed ? next : requests;
     });
-  }, [scheduleMinute]);
+  }, [scheduleMinute, timetable]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowAiHint(false), 3_000);
@@ -278,31 +346,42 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   }, [isDarkMode]);
 
   useEffect(() => {
-    if (loadedAttendanceDateKey !== attendanceDateKey) return;
-    try {
-      window.localStorage.setItem(`hawk-attendance-records:${attendanceDateKey}`, JSON.stringify(attendanceRecords));
-    } catch {
-      // Attendance counts remain available for this session if browser storage is unavailable.
-    }
-  }, [attendanceDateKey, attendanceRecords, loadedAttendanceDateKey]);
-
-  useEffect(() => {
     if (loadedConductedDateKey !== attendanceDateKey) return;
     try {
-      window.localStorage.setItem(`hawk-conducted-periods:${attendanceDateKey}`, JSON.stringify(conductedPeriods));
+      const storageKey = `hawk-conducted-periods:${attendanceDateKey}`;
+      if (Object.keys(conductedPeriods).length > 0) window.localStorage.setItem(storageKey, JSON.stringify(conductedPeriods));
+      else window.localStorage.removeItem(storageKey);
     } catch {
       // Conducted state remains available for this session if browser storage is unavailable.
     }
   }, [attendanceDateKey, conductedPeriods, loadedConductedDateKey]);
 
   useEffect(() => {
+    if (loadedAttendanceDateKey !== attendanceDateKey) return;
+    const recordsForStorage = Object.fromEntries(Object.entries(attendanceRecords).flatMap(([periodId, record]) => {
+      const period = timetable.find((item) => item.period === periodId);
+      if (!period || record.periodStartMinute !== period.startMinute || !record.markedAt) return [];
+      return [[getAttendanceRecordKey(period), { ...record, marked: true, periodStartMinute: period.startMinute }]];
+    }));
+    try {
+      const storageKey = `hawk-attendance-records:${attendanceDateKey}`;
+      if (Object.keys(recordsForStorage).length > 0) window.localStorage.setItem(storageKey, JSON.stringify(recordsForStorage));
+      else window.localStorage.removeItem(storageKey);
+    } catch {
+      // Attendance remains available for this session if browser storage is unavailable.
+    }
+  }, [attendanceDateKey, attendanceRecords, loadedAttendanceDateKey]);
+
+  useEffect(() => {
     if (loadedProxyDateKey !== attendanceDateKey) return;
     try {
-      window.localStorage.setItem(`hawk-proxy-requests:${attendanceDateKey}`, JSON.stringify(proxyRequests));
+      const storageKey = `hawk-proxy-requests:${attendanceDateKey}`;
+      if (Object.keys(proxyRequests).length > 0) window.localStorage.setItem(storageKey, JSON.stringify(proxyRequests));
+      else window.localStorage.removeItem(storageKey);
     } catch {
       // Proxy requests remain available for this session if browser storage is unavailable.
     }
-  }, [attendanceDateKey, loadedProxyDateKey, proxyRequests]);
+  }, [attendanceDateKey, loadedProxyDateKey, proxyRequests, timetable]);
 
   useEffect(() => {
     if (!proxyNotification) return;
@@ -314,7 +393,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     const storageKey = `hawk-proxy-requests:${attendanceDateKey}`;
     function handleProxyRequestUpdate(event: StorageEvent) {
       if (event.key !== storageKey || loadedProxyDateKey !== attendanceDateKey) return;
-      const incoming = parseProxyRequests(event.newValue);
+      const incoming = parseProxyRequests(event.newValue, timetable);
       for (const [periodId, request] of Object.entries(incoming)) {
         if (request.status !== "accepted" || proxyRequests[periodId]?.status !== "pending") continue;
         const period = timetable.find((item) => item.period === periodId);
@@ -338,7 +417,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     }
     window.addEventListener("storage", handleProxyRequestUpdate);
     return () => window.removeEventListener("storage", handleProxyRequestUpdate);
-  }, [attendanceDateKey, loadedProxyDateKey, proxyRequests]);
+  }, [attendanceDateKey, loadedProxyDateKey, proxyRequests, timetable]);
 
   useEffect(() => {
     const dialog = attendanceDialogRef.current;
@@ -350,9 +429,16 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     if (!attendanceTarget && dialog.open) dialog.close();
   }, [attendanceTarget]);
 
+  useEffect(() => {
+    const dialog = resetDialogRef.current;
+    if (!dialog) return;
+    if (resetDialogOpen && !dialog.open) dialog.showModal();
+    if (!resetDialogOpen && dialog.open) dialog.close();
+  }, [resetDialogOpen]);
+
   function openAttendance(period: TimetablePeriod) {
     if (scheduleMinute < period.startMinute) return;
-    const record = attendanceRecords[period.period];
+    const record = visibleAttendanceRecords[period.period];
     setAttendanceTotal(String(record?.total ?? period.students ?? ""));
     setAttendancePresent(String(record?.present ?? ""));
     setAttendanceTarget(period);
@@ -374,6 +460,37 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
       delete next[period.period];
       return next;
     });
+  }
+
+  function resetPeriods() {
+    const resetAt = new Date();
+    const resetDateKey = getAttendanceDateKey(resetAt);
+    const proposedStart = getScheduleMinute(resetAt) + 10;
+    const startMinute = Math.min(proposedStart, 1439);
+    const wasCapped = proposedStart + 62 > 1439;
+    const nextTimetable = buildResetTimetable(timetable, startMinute);
+    const p1Start = formatScheduleTime(nextTimetable[0].startMinute);
+    const notice = wasCapped
+      ? `Periods reset. P1 starts at ${p1Start}. Schedule capped at end of day.`
+      : `Periods reset. P1 starts at ${p1Start}.`;
+    try {
+      window.localStorage.setItem(`hawk-timetable-v2:${resetDateKey}`, JSON.stringify(nextTimetable));
+      window.localStorage.removeItem(`hawk-attendance-records:${resetDateKey}`);
+      window.localStorage.removeItem(`hawk-conducted-periods:${resetDateKey}`);
+    } catch {
+      // The reset still applies for this session if local storage is unavailable.
+    }
+    setClock(resetAt);
+    setTimetable(nextTimetable);
+    setLoadedTimetableDateKey(resetDateKey);
+    setLoadedAttendanceDateKey(resetDateKey);
+    setLoadedConductedDateKey(resetDateKey);
+    setLoadedProxyDateKey(resetDateKey);
+    setAttendanceRecords({});
+    setConductedPeriods({});
+    if (resetDateKey !== attendanceDateKey) setProxyRequests(loadProxyRequests(resetDateKey, timetable));
+    setResetDialogOpen(false);
+    setProxyNotification(notice);
   }
 
   return (
@@ -428,7 +545,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <main ref={mainContentRef} className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-4 pb-44 pt-7 md:gap-9 md:px-8 md:pb-12 md:pt-10">
               <section data-ai-obstacle className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{dashboardDate}</h1>
-                <MetaText className="text-muted-foreground text-sm md:pb-1" value={`${attendanceSummary.totalClassCount} classes today · ${attendanceSummary.headerCount} ${attendanceSummary.headerLabel}`} />
+                <MetaText className="text-muted-foreground text-sm md:pb-1" value={`${attendanceSummary.totalClassCount} classes today${attendanceSummary.headerCount > 0 ? ` · ${attendanceSummary.headerCount} ${attendanceSummary.headerLabel}` : ""}`} />
               </section>
 
               <div className="grid gap-7 md:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.9fr)] md:gap-8">
@@ -454,13 +571,23 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     ) : activePeriod ? (
                       <>
                         <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
-                          {activePeriod.period === "P1" && activePeriodAttendance ? <Check className="size-3.5" /> : <Clock className="size-3.5" />}
-                          {activePeriod.period === "P1"
-                            ? activePeriodAttendance ? "Attendance marked" : "Attendance pending"
-                            : activePeriodConducted ? "Conducted" : "Class in progress"}
+                          {activePeriodLabel === "Attendance marked" || activePeriodLabel === "Conducted"
+                            ? <CheckCheck aria-hidden="true" className="size-3.5" />
+                            : <Clock aria-hidden="true" className="size-3.5" />}
+                          {activePeriodLabel}
                         </div>
-                        <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.subject}</h2>
-                        <MetaText className="text-sm text-on-primary-container/80" value={activePeriod.isOwnClass ? `${activePeriod.students ?? 0} students · Your class` : activePeriod.details} />
+                        {activePeriod.isOwnClass ? (
+                          <>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period} {activePeriod.subject}</h2>
+                            <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
+                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(activePeriod)} />
+                          </>
+                        ) : (
+                          <>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period} {activePeriod.subject}</h2>
+                            <MetaText className="text-sm text-on-primary-container/80" value={activePeriod.details} />
+                          </>
+                        )}
                       </>
                     ) : heroPeriod ? (
                       <>
@@ -468,19 +595,24 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                           <Clock className="size-3.5" />
                           {nextUpcomingPeriod ? "Up next" : "No more classes today"}
                         </div>
-                        <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period} · {heroPeriod.subject}</h2>
-                        <MetaText className="text-sm text-on-primary-container/80" value={`${heroPeriod.time} · ${heroPeriod.details}`} />
+                        {heroPeriod.isOwnClass ? (
+                          <>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period} {heroPeriod.subject}</h2>
+                            <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
+                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(heroPeriod)} />
+                          </>
+                        ) : (
+                          <>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period} · {heroPeriod.subject}</h2>
+                            <MetaText className="text-sm text-on-primary-container/80" value={heroPeriod.details} />
+                          </>
+                        )}
                       </>
                     ) : null}
                   </div>
                   {!dayComplete && activePeriod && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
-                      {activePeriod.period === "P1" ? activePeriodAttendance ? "Marked" : "Now" : activePeriodConducted ? "Conducted" : "Now"}
-                    </span>
-                  )}
-                  {!dayComplete && !activePeriod && nextUpcomingPeriod && (
-                    <span className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
-                      {nextUpcomingPeriod.time}
+                      Now
                     </span>
                   )}
                 </div>
@@ -529,9 +661,9 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => cancelProxyRequest(cancelableProxyRequestPeriod)}
-                    className="mt-2 flex min-h-10 w-full items-center justify-center text-sm font-medium text-icon-accent underline underline-offset-4 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#b85c68] px-5 text-sm font-normal text-white transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
-                    Cancel Request for {cancelableProxyRequestPeriod.period}
+                    Cancel Request for {cancelableProxyRequestPeriod.period}<ArrowRight className="size-4" />
                   </button>
                 )}
               </section>
@@ -546,13 +678,18 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
 
                 <div className="overflow-hidden rounded-[24px] border border-border bg-card">
                   {timetable.map((p, index) => {
-                    const attendance = attendanceRecords[p.period];
-                    const periodState = getPeriodState(p, scheduleMinute, attendance);
+                    const attendance = visibleAttendanceRecords[p.period];
+                    const periodState = getPeriodState(p, scheduleMinute);
                     const canMarkAttendance = hasAttendanceRights(p, proxyAttendanceRights);
                     const proxyRequest = proxyRequests[p.period];
                     const proxyRequestStatus = getProxyRequestStatus(proxyRequest, p, attendanceDateKey, scheduleMinute);
                     const isProxyAccepted = proxyRequestStatus === "accepted";
                     const isConducted = isPeriodConducted(p, conductedPeriods, attendanceDateKey, scheduleMinute);
+                    const isPastPeriod = periodState === "grace" || periodState === "done";
+                    const isAttendancePending = canMarkAttendance && !attendance && periodState === "grace" && proxyRequestStatus !== "expired";
+                    const isSelfConducted = proxyRequestStatus === "expired" && isConducted && !p.isProxy;
+                    const isRequestExpired = proxyRequestStatus === "expired" && !isConducted && periodState !== "done";
+                    const isMissed = !attendance && !isConducted && periodState === "done" && (canMarkAttendance || proxyRequestStatus === "expired");
                     const canRequestProxy = activePeriodIndex >= 0 && index === activePeriodIndex + 1 && p.period !== "P1" && periodState === "upcoming" && !p.isOwnClass && !p.isProxy && !proxyRequestStatus;
                     const periodDetails = isProxyAccepted
                       ? `${p.details} · Covered by ${proxyRequest?.coveringTeacherName?.trim() || "Covering teacher"}`
@@ -564,30 +701,30 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                         className={[
                           "flex items-start gap-3 px-4 py-4 transition-colors md:px-5",
                           index < timetable.length - 1 ? "border-b" : "",
-                          periodState === "running" ? "bg-primary-soft" : "",
-                          periodState === "done" ? "bg-muted" : "",
-                          periodState === "upcoming" ? "text-muted-foreground" : "",
+                          periodState === "running" ? "bg-primary-soft" : isPastPeriod ? "bg-[#f3f4f3]" : "bg-card",
                         ].join(" ")}
                       >
                         <div className="flex w-28 shrink-0 flex-col gap-1 pt-0.5 tabular-nums">
-                          <span aria-label={`Period ${index + 1}`} title={`Period ${index + 1}`} className="text-sm font-medium">{p.period}</span>
-                          <span className="whitespace-nowrap text-muted-foreground text-sm font-normal">{p.time}</span>
+                          <span aria-label={`Period ${index + 1}`} title={`Period ${index + 1}`} className={`text-sm font-medium ${isPastPeriod ? "text-[#68716c]" : "text-foreground"}`}>{p.period}</span>
+                          <span className={`whitespace-nowrap text-sm font-normal ${isPastPeriod ? "text-[#68716c]" : "text-foreground"}`}>{p.time}</span>
                         </div>
                         <div className="grow min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-base font-semibold">{p.subject}</span>
+                            <span className={`text-base font-semibold ${isPastPeriod ? "text-[#68716c]" : "text-foreground"}`}>{p.subject}</span>
                             {periodState === "running" && <span className="shrink-0 rounded-full bg-primary-container px-2.5 py-1 text-[12px] font-medium text-on-primary-container">Now</span>}
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-2 md:gap-y-1">
-                            <MetaText className="text-muted-foreground text-sm leading-relaxed" value={periodDetails} />
-                            {((p.isProxy && periodState !== "upcoming") || (canMarkAttendance && periodState === "missed" && !attendance) || (!canMarkAttendance && isConducted) || proxyRequestStatus === "pending" || proxyRequestStatus === "expired" || isProxyAccepted) && (
-                              <span className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap ${p.isProxy ? "" : "basis-full md:basis-auto"}`}>
-                                {p.isProxy && periodState !== "upcoming" && !isProxyAccepted && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
-                                {proxyRequestStatus === "pending" && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Pending</span>}
-                                {proxyRequestStatus === "expired" && <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Request Expired</span>}
-                                {isProxyAccepted && <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
-                                {canMarkAttendance && periodState === "missed" && !attendance && <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
-                                {!canMarkAttendance && isConducted && <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Conducted</span>}
+                            <MetaText className={`${isPastPeriod ? "text-[#68716c]" : "text-foreground"} text-sm leading-relaxed`} value={periodDetails} />
+                            {(p.isProxy || isAttendancePending || isMissed || (!canMarkAttendance && isConducted) || proxyRequestStatus === "pending" || isRequestExpired || isSelfConducted || isProxyAccepted) && (
+                              <span className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap ${p.isProxy ? "" : "basis-full md:basis-auto"} ${isPastPeriod ? "opacity-85" : ""}`}>
+                                {p.isProxy && !isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
+                                {proxyRequestStatus === "pending" && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Pending</span>}
+                                {isRequestExpired && <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Request Expired</span>}
+                                {isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
+                                {isAttendancePending && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Attendance pending</span>}
+                                {isMissed && <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
+                                {isSelfConducted && <span className="inline-flex items-center rounded-full border border-[#78a878] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#245d42]">Self-conducted</span>}
+                                {!isSelfConducted && !isRequestExpired && !isMissed && isConducted && <span className="inline-flex items-center rounded-full border border-[#78a878] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#245d42]">Conducted</span>}
                               </span>
                             )}
                           </div>
@@ -600,8 +737,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                               Request Proxy
                             </button>
                           )}
-                          {canMarkAttendance && attendance && (
-                            <span className="mt-1.5 inline-flex items-center gap-1 text-sm font-normal text-icon-accent">
+                          {canMarkAttendance && attendance && periodState !== "upcoming" && (
+                            <span className={`mt-1.5 inline-flex items-center gap-1 text-sm font-normal ${isPastPeriod ? "text-[#68716c]" : "text-icon-accent"}`}>
                               <Check aria-hidden="true" className="size-3.5" />
                               {attendance.present}/{attendance.total} present
                             </span>
@@ -742,6 +879,23 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     </button>
                   </div>
                 </section>
+                {import.meta.env.DEV && (
+                  <section data-ai-obstacle className="rounded-[24px] border bg-card p-5 md:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <h2 className="text-base font-semibold">Reset periods</h2>
+                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Resets today’s timetable to start 10 minutes from now (IST).</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setResetDialogOpen(true)}
+                        className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </section>
+                )}
                 <section data-ai-obstacle className="rounded-[24px] border bg-card p-5 md:p-6">
                   <button
                     type="button"
@@ -787,6 +941,24 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
           </nav>
 
           <dialog
+            ref={resetDialogRef}
+            aria-labelledby="reset-periods-title"
+            onCancel={(event) => { event.preventDefault(); setResetDialogOpen(false); }}
+            onClick={(event) => { if (event.target === resetDialogRef.current) setResetDialogOpen(false); }}
+            className="m-auto w-[calc(100%-32px)] max-w-sm rounded-2xl border border-border bg-card p-0 text-foreground shadow-2xl backdrop:bg-foreground/50"
+          >
+            <div className="flex flex-col gap-4 p-5">
+              <div>
+                <h2 id="reset-periods-title" className="text-base font-semibold">Reset today’s periods and clear today’s attendance data?</h2>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setResetDialogOpen(false)} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                <button type="button" onClick={resetPeriods} className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Reset</button>
+              </div>
+            </div>
+          </dialog>
+
+          <dialog
             ref={attendanceDialogRef}
             aria-labelledby="attendance-dialog-title"
             onCancel={(event) => { event.preventDefault(); setAttendanceTarget(null); }}
@@ -801,7 +973,17 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   const total = Number(attendanceTotal);
                   const present = Number(attendancePresent);
                   if (!Number.isInteger(total) || total < 1 || !Number.isInteger(present) || present < 0 || present > total) return;
-                  setAttendanceRecords((records) => ({ ...records, [attendanceTarget.period]: { present, total, markedAt: Date.now() } }));
+                  if (scheduleMinute < attendanceTarget.startMinute) return;
+                  setAttendanceRecords((records) => ({
+                    ...records,
+                    [attendanceTarget.period]: {
+                      marked: true,
+                      present,
+                      total,
+                      markedAt: Date.now(),
+                      periodStartMinute: attendanceTarget.startMinute,
+                    },
+                  }));
                   setAttendanceTarget(null);
                 }}
               >
