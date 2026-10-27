@@ -285,8 +285,15 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const developerPasswordDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setClock(new Date()), 15_000);
-    return () => window.clearInterval(timer);
+    const refreshClock = () => setClock(new Date());
+    const timer = window.setInterval(refreshClock, 1_000);
+    document.addEventListener("visibilitychange", refreshClock);
+    window.addEventListener("focus", refreshClock);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshClock);
+      window.removeEventListener("focus", refreshClock);
+    };
   }, []);
 
   useEffect(() => {
