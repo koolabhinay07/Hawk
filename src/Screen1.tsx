@@ -768,8 +768,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                                 {isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
                                 {isAttendancePending && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Attendance pending</span>}
                                 {isMissed && <span className="inline-flex items-center gap-1 rounded-full border border-accent-foreground bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
-                                {isSelfConducted && <span className="inline-flex items-center rounded-full border border-[#78a878] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#245d42]">Self-conducted</span>}
-                                {!isSelfConducted && !isRequestExpired && !isMissed && isConducted && <span className="inline-flex items-center rounded-full border border-[#78a878] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#245d42]">Conducted</span>}
+                                {isSelfConducted && <span className="inline-flex items-center rounded-full border border-[#47764f] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#47764f]">Self-conducted</span>}
+                                {!isSelfConducted && !isRequestExpired && !isMissed && isConducted && <span className="inline-flex items-center rounded-full border border-[#47764f] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#47764f]">Conducted</span>}
                               </span>
                             )}
                           </div>
