@@ -30,10 +30,10 @@ export const attendanceGraceMinutes = 15;
 
 export const timetable: TimetablePeriod[] = [
   { period: "P1", time: "8:00–8:10 PM", startMinute: 1200, endMinute: 1210, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
-  { period: "P2", time: "8:13–8:23 PM", startMinute: 1213, endMinute: 1223, subject: "Science", details: "Class 7-A · Covering for Mr. Verma", isProxy: true },
-  { period: "P3", time: "8:26–8:36 PM", startMinute: 1226, endMinute: 1236, subject: "Mathematics", details: "Class 9-A · 40 students", students: 40 },
-  { period: "P4", time: "8:39–8:49 PM", startMinute: 1239, endMinute: 1249, subject: "Mathematics", details: "Class 8-A · 41 students", students: 41 },
-  { period: "P5", time: "8:52–9:02 PM", startMinute: 1252, endMinute: 1262, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
+  { period: "P2", time: "8:13–8:23 PM", startMinute: 1213, endMinute: 1223, subject: "Physics", details: "Class 7-A · Covering for Mr. Verma", isProxy: true },
+  { period: "P3", time: "8:26–8:36 PM", startMinute: 1226, endMinute: 1236, subject: "English", details: "Class 9-A · 40 students", students: 40 },
+  { period: "P4", time: "8:39–8:49 PM", startMinute: 1239, endMinute: 1249, subject: "History", details: "Class 8-A · 41 students", students: 41 },
+  { period: "P5", time: "8:52–9:02 PM", startMinute: 1252, endMinute: 1262, subject: "Biology", details: "Class 10-C · 40 students", students: 40 },
 ];
 
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
