@@ -39,13 +39,6 @@ const navItems = [
 
 const firstScheduledPeriod = [...timetable].sort((a, b) => a.startMinute - b.startMinute)[0];
 
-function formatScheduleTime(minute: number) {
-  const hour24 = Math.floor(minute / 60);
-  const hour12 = hour24 % 12 || 12;
-  const minuteText = String(minute % 60).padStart(2, "0");
-  return `${hour12}:${minuteText} ${hour24 < 12 ? "AM" : "PM"}`;
-}
-
 function MetaText({ value, className }: { value: string; className: string }) {
   return (
     <span className={className}>

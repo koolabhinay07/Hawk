@@ -314,8 +314,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your account to continue to your teacher workspace.</p>
                 {notice && <p role="status" className="mt-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  <button type="button" onClick={onComplete} className={outlinedButton}><span aria-hidden="true" className="text-base font-bold">●</span>Login with Apple</button>
-                  <button type="button" onClick={onComplete} className={outlinedButton}><span aria-hidden="true" className="font-bold text-base">G</span>Login with Google</button>
+                  <button type="button" onClick={() => onComplete()} className={outlinedButton}><span aria-hidden="true" className="text-base font-bold">●</span>Login with Apple</button>
+                  <button type="button" onClick={() => onComplete()} className={outlinedButton}><span aria-hidden="true" className="font-bold text-base">G</span>Login with Google</button>
                 </div>
                 <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" />Or Continue with Email<span className="h-px grow bg-border" /></div>
                 <form className="grid gap-4" onSubmit={submitLogin}>
