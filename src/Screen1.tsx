@@ -363,6 +363,9 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const cancelableProxyRequestPeriod = effectiveTimetable.find((period) =>
     getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute) === "pending",
   );
+  const cancelableSwapRequest = swapRequests.find((request) =>
+    request.status === "pending" && request.requesterName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase(),
+  );
   const attendanceSummary = getTodaysAttendanceSummary(effectiveTimetable, scheduleMinute, visibleAttendanceRecords, proxyAttendanceRights);
   const { dayComplete } = attendanceSummary;
   const allPeriodsEnded = effectiveTimetable.length > 0 && scheduleMinute >= Math.max(...effectiveTimetable.map((period) => period.endMinute));
@@ -697,6 +700,10 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     });
   }
 
+  function cancelSwapRequest(requestId: string) {
+    setSwapRequests((requests) => requests.filter((request) => request.id !== requestId));
+  }
+
   function resetPeriods() {
     const resetAt = new Date();
     const resetDateKey = getAttendanceDateKey(resetAt);
@@ -898,7 +905,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   </div>
                   {!dayComplete && activePeriod && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
-                      {activePeriodConducted ? "Conducted" : "Now"}
+                      {activePeriodAttendance ? "Marked" : activePeriodConducted ? "Conducted" : "Now"}
                     </span>
                   )}
                 </div>
@@ -947,9 +954,18 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => cancelProxyRequest(cancelableProxyRequestPeriod)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#b85c68] px-5 text-sm font-normal text-white transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-sm font-normal text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Cancel Request for {cancelableProxyRequestPeriod.period}
+                  </button>
+                )}
+                {!dayComplete && cancelableSwapRequest && (
+                  <button
+                    type="button"
+                    onClick={() => cancelSwapRequest(cancelableSwapRequest.id)}
+                    className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-sm font-normal text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Cancel Swap Request for {cancelableSwapRequest.period}
                   </button>
                 )}
               </section>
@@ -974,7 +990,6 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       (request.status === "pending" || request.status === "accepted"));
                     const isOutgoingSwapPending = matchingSwap?.status === "pending" && matchingSwap.requesterName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase();
                     const incomingSwapRequest = matchingSwap?.status === "pending" && matchingSwap.recipientName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase() ? matchingSwap : undefined;
-                    const canShowAttendanceCta = canMarkAttendance && !attendance && (periodState === "running" || periodState === "grace") && matchingSwap?.status !== "pending";
                     const canRequestProxy = p.period !== "P1" && p.isOwnClass === true && periodState === "upcoming" && scheduleMinute >= p.startMinute - proxyRequestWindowMinutes && !proxyRequestStatus;
                     const canRequestSwap = p.isOwnClass === true && periodState === "upcoming" && !matchingSwap && !p.isProxy;
                     const periodDetails = isProxyAccepted
@@ -1033,15 +1048,6 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                               className="mt-2 inline-flex min-h-9 w-fit self-start items-center justify-center whitespace-nowrap rounded-full border border-border bg-transparent px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                             >
                               Request Proxy
-                            </button>
-                          )}
-                          {canShowAttendanceCta && (
-                            <button
-                              type="button"
-                              onClick={() => openAttendance(p)}
-                              className="mt-2 inline-flex min-h-9 w-fit items-center justify-center whitespace-nowrap rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                            >
-                              Mark Attendance
                             </button>
                           )}
                           {canMarkAttendance && attendance && periodState !== "upcoming" && (
