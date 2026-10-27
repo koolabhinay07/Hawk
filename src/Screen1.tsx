@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowRight,
   Bell,
   BookOpen,
   Check,
@@ -266,7 +265,12 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
         ? "Conducted"
         : "Ongoing";
   const nextUpcomingPeriod = timetable.find((period) => period.startMinute > scheduleMinute);
-  const heroPeriod = activePeriod ?? nextUpcomingPeriod ?? timetable[timetable.length - 1];
+  const recentlyMarkedPeriod = !activePeriod
+    ? timetable
+        .filter((period) => getPeriodState(period, scheduleMinute) === "grace" && visibleAttendanceRecords[period.period])
+        .sort((a, b) => b.startMinute - a.startMinute)[0]
+    : undefined;
+  const heroPeriod = activePeriod ?? recentlyMarkedPeriod ?? nextUpcomingPeriod ?? timetable[timetable.length - 1];
   const cancelableProxyRequestPeriod = timetable.find((period) =>
     getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute) === "pending",
   );
@@ -628,8 +632,10 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     ) : heroPeriod ? (
                       <>
                         <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
-                          <Clock className="size-3.5" />
-                          {nextUpcomingPeriod ? "Up next" : "No more classes today"}
+                          {recentlyMarkedPeriod
+                            ? <CheckCheck aria-hidden="true" className="size-3.5" />
+                            : <Clock aria-hidden="true" className="size-3.5" />}
+                          {recentlyMarkedPeriod ? "Attendance marked" : nextUpcomingPeriod ? "Up next" : "No more classes today"}
                         </div>
                         {heroPeriod.isOwnClass ? (
                           <>
@@ -646,7 +652,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       </>
                     ) : null}
                   </div>
-                  {!dayComplete && activePeriod && (
+                  {!dayComplete && activePeriod && !activePeriodConducted && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
                       Now
                     </span>
@@ -682,7 +688,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     onClick={() => openAttendance(activePeriod)}
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
-                    Mark Attendance<ArrowRight className="size-4" />
+                    Mark Attendance
                   </button>
                 ) : activePeriod && activePeriod.period !== "P1" && !activePeriodConducted ? (
                   <button
@@ -690,7 +696,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     onClick={() => setConductedPeriods((periods) => ({ ...periods, [activePeriod.period]: Date.now() }))}
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
-                    Mark as Conducted<ArrowRight className="size-4" />
+                    Mark as Conducted
                   </button>
                 ) : null}
                 {!dayComplete && cancelableProxyRequestPeriod && (
@@ -699,7 +705,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     onClick={() => cancelProxyRequest(cancelableProxyRequestPeriod)}
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#b85c68] px-5 text-sm font-normal text-white transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
-                    Cancel Request for {cancelableProxyRequestPeriod.period}<ArrowRight className="size-4" />
+                    Cancel Request for {cancelableProxyRequestPeriod.period}
                   </button>
                 )}
               </section>
