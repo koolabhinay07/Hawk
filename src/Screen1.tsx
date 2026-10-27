@@ -36,6 +36,7 @@ const navItems = [
   { icon: GraduationCap, label: "Academics" },
   { icon: User, label: "Profile" },
 ];
+const proxyRequestWindowMinutes = 10;
 
 function MetaText({ value, className }: { value: string; className: string }) {
   return (
@@ -160,6 +161,48 @@ type ProxyRequest = {
   coveringTeacherName?: string;
 };
 
+type SwapRequest = {
+  id: string;
+  period: string;
+  requesterName: string;
+  recipientName: string;
+  status: "pending" | "accepted" | "declined" | "expired";
+  requestedAt: number;
+  acceptedAt?: number;
+  requesterSubject: string;
+  requesterDetails: string;
+  requesterStudents?: number;
+  recipientSubject?: string;
+  recipientDetails?: string;
+  recipientStudents?: number;
+};
+
+function parseSwapRequests(raw: string | null, periods: TimetablePeriod[]): SwapRequest[] {
+  try {
+    const parsed: unknown = JSON.parse(raw ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    const periodIds = new Set(periods.map((period) => period.period));
+    return parsed.filter((value): value is SwapRequest => {
+      if (!value || typeof value !== "object") return false;
+      const request = value as Partial<SwapRequest>;
+      return typeof request.id === "string" && typeof request.period === "string" && periodIds.has(request.period) &&
+        typeof request.requesterName === "string" && typeof request.recipientName === "string" &&
+        ["pending", "accepted", "declined", "expired"].includes(request.status ?? "") &&
+        Number.isFinite(request.requestedAt) && typeof request.requesterSubject === "string" && typeof request.requesterDetails === "string";
+    });
+  } catch {
+    return [];
+  }
+}
+
+function loadSwapRequests(dateKey: string, periods: TimetablePeriod[]) {
+  try {
+    return parseSwapRequests(window.localStorage.getItem(`hawk-swap-requests:${dateKey}`), periods);
+  } catch {
+    return [];
+  }
+}
+
 function parseProxyRequests(raw: string | null, periods: TimetablePeriod[]): Record<string, ProxyRequest> {
   try {
     const parsed: unknown = JSON.parse(raw ?? "{}");
@@ -204,6 +247,20 @@ function getProxyRequestStatus(request: ProxyRequest | undefined, period: Timeta
   return scheduleMinute >= period.startMinute ? "expired" as const : "pending" as const;
 }
 
+function isMissedPeriod(
+  period: TimetablePeriod,
+  periodState: ReturnType<typeof getPeriodState>,
+  attendance: AttendanceRecord | undefined,
+  isConducted: boolean,
+  canMarkAttendance: boolean,
+  proxyRequestExpired: boolean,
+) {
+  return !attendance && !isConducted && (
+    (periodState === "done" && (canMarkAttendance || proxyRequestExpired)) ||
+    (!period.isOwnClass && !period.isProxy && (periodState === "grace" || periodState === "done"))
+  );
+}
+
 function getOwnClassSummary(period: TimetablePeriod) {
   const className = period.details.split(" · ")[0].replace(/-(?=[A-Z])/g, " ");
   return period.students === undefined ? period.details : `${className} · ${period.students} students`;
@@ -231,12 +288,17 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const [loadedConductedDateKey, setLoadedConductedDateKey] = useState(attendanceDateKey);
   const [proxyRequests, setProxyRequests] = useState<Record<string, ProxyRequest>>(() => loadProxyRequests(attendanceDateKey, timetable));
   const [loadedProxyDateKey, setLoadedProxyDateKey] = useState(attendanceDateKey);
+  const [swapRequests, setSwapRequests] = useState<SwapRequest[]>(() => loadSwapRequests(attendanceDateKey, timetable));
+  const [loadedSwapDateKey, setLoadedSwapDateKey] = useState(attendanceDateKey);
   const [proxyNotification, setProxyNotification] = useState("");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [developerMode, setDeveloperMode] = useState(() => window.localStorage.getItem("hawk-developer-mode") === "enabled");
   const [developerPasswordOpen, setDeveloperPasswordOpen] = useState(false);
   const [developerPassword, setDeveloperPassword] = useState("");
   const [developerPasswordError, setDeveloperPasswordError] = useState("");
+  const [swapDialogTarget, setSwapDialogTarget] = useState<TimetablePeriod | null>(null);
+  const [swapRecipientName, setSwapRecipientName] = useState("");
+  const [swapDialogError, setSwapDialogError] = useState("");
   const [proxyAttendanceRights] = useState(() => {
     try {
       return window.localStorage.getItem("hawk-proxy-attendance-rights") === "true";
@@ -248,13 +310,46 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const [attendanceTotal, setAttendanceTotal] = useState("");
   const [attendancePresent, setAttendancePresent] = useState("");
   const scheduleMinute = getScheduleMinute(clock);
-  const firstScheduledPeriod = [...timetable].sort((a, b) => a.startMinute - b.startMinute)[0];
+  const effectiveTimetable = timetable.map((period) => {
+    const swap = swapRequests.find((request) => request.period === period.period && request.status === "accepted" &&
+      (request.requesterName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase() || request.recipientName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase()));
+    if (!swap) return period;
+    const isRequester = swap.requesterName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase();
+    const otherName = isRequester ? swap.recipientName : swap.requesterName;
+    const otherSubject = isRequester ? swap.recipientSubject : swap.requesterSubject;
+    const otherDetails = isRequester ? swap.recipientDetails : swap.requesterDetails;
+    const otherStudents = isRequester ? swap.recipientStudents : swap.requesterStudents;
+    const className = otherDetails?.split(" · ")[0] ?? "Class";
+    return {
+      ...period,
+      subject: otherSubject ?? period.subject,
+      details: `Taking ${className} · Swapped with ${otherName}`,
+      students: otherStudents,
+      isOwnClass: false,
+      isProxy: false,
+      isSwap: true,
+      swappedWith: otherName,
+    };
+  });
+  const firstScheduledPeriod = [...effectiveTimetable].sort((a, b) => a.startMinute - b.startMinute)[0];
   const visibleAttendanceRecords = Object.fromEntries(Object.entries(attendanceRecords).filter(([periodId]) => {
-    const period = timetable.find((item) => item.period === periodId);
+    const period = effectiveTimetable.find((item) => item.period === periodId);
     return period !== undefined && scheduleMinute >= period.startMinute;
   }));
-  const activePeriodIndex = timetable.findIndex((period) => scheduleMinute >= period.startMinute && scheduleMinute < period.endMinute);
-  const activePeriod = activePeriodIndex >= 0 ? timetable[activePeriodIndex] : undefined;
+  const periodStatuses = effectiveTimetable.map((period) => {
+    const attendance = visibleAttendanceRecords[period.period];
+    const state = getPeriodState(period, scheduleMinute);
+    const canMarkAttendance = hasAttendanceRights(period, proxyAttendanceRights);
+    const proxyRequestStatus = getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute);
+    const isConducted = isPeriodConducted(period, conductedPeriods, attendanceDateKey, scheduleMinute);
+    const isSelfConducted = proxyRequestStatus === "expired" && isConducted && !period.isProxy;
+    const isRequestExpired = proxyRequestStatus === "expired" && !isConducted && state !== "done";
+    const isMissed = isMissedPeriod(period, state, attendance, isConducted, canMarkAttendance, proxyRequestStatus === "expired");
+    const isAttendancePending = canMarkAttendance && !attendance && state === "grace" && proxyRequestStatus !== "expired";
+    return { period, attendance, state, canMarkAttendance, proxyRequestStatus, isConducted, isSelfConducted, isRequestExpired, isMissed, isAttendancePending };
+  });
+  const activePeriodIndex = effectiveTimetable.findIndex((period) => scheduleMinute >= period.startMinute && scheduleMinute < period.endMinute);
+  const activePeriod = activePeriodIndex >= 0 ? effectiveTimetable[activePeriodIndex] : undefined;
   const activePeriodAttendance = activePeriod ? visibleAttendanceRecords[activePeriod.period] : undefined;
   const activePeriodConducted = activePeriod ? isPeriodConducted(activePeriod, conductedPeriods, attendanceDateKey, scheduleMinute) : false;
   const activePeriodLabel = activePeriodAttendance
@@ -264,18 +359,28 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
       : activePeriodConducted
         ? "Conducted"
         : "Ongoing";
-  const nextUpcomingPeriod = timetable.find((period) => period.startMinute > scheduleMinute);
+  const nextUpcomingPeriod = effectiveTimetable.find((period) => period.startMinute > scheduleMinute);
   const recentlyMarkedPeriod = !activePeriod
-    ? timetable
+    ? effectiveTimetable
         .filter((period) => getPeriodState(period, scheduleMinute) === "grace" && visibleAttendanceRecords[period.period])
         .sort((a, b) => b.startMinute - a.startMinute)[0]
     : undefined;
-  const heroPeriod = activePeriod ?? recentlyMarkedPeriod ?? nextUpcomingPeriod ?? timetable[timetable.length - 1];
-  const cancelableProxyRequestPeriod = timetable.find((period) =>
+  const heroPeriod = activePeriod ?? recentlyMarkedPeriod ?? nextUpcomingPeriod ?? effectiveTimetable[effectiveTimetable.length - 1];
+  const cancelableProxyRequestPeriod = effectiveTimetable.find((period) =>
     getProxyRequestStatus(proxyRequests[period.period], period, attendanceDateKey, scheduleMinute) === "pending",
   );
-  const attendanceSummary = getTodaysAttendanceSummary(timetable, scheduleMinute, visibleAttendanceRecords, proxyAttendanceRights);
+  const attendanceSummary = getTodaysAttendanceSummary(effectiveTimetable, scheduleMinute, visibleAttendanceRecords, proxyAttendanceRights);
   const { dayComplete } = attendanceSummary;
+  const allPeriodsEnded = effectiveTimetable.length > 0 && scheduleMinute >= Math.max(...effectiveTimetable.map((period) => period.endMinute));
+  const takenPeriodCount = periodStatuses.filter(({ period, attendance, canMarkAttendance, isConducted }) =>
+    period.isSwap || isConducted || (canMarkAttendance && Boolean(attendance)),
+  ).length;
+  const missedPeriodCount = dayComplete ? periodStatuses.filter(({ isMissed }) => isMissed).length : 0;
+  const attendanceDutyCount = periodStatuses.filter(({ canMarkAttendance }) => canMarkAttendance).length;
+  const attendanceMarkedCount = periodStatuses.filter(({ canMarkAttendance, attendance }) => canMarkAttendance && Boolean(attendance)).length;
+  const dailySummarySuffix = dayComplete
+    ? missedPeriodCount > 0 ? ` · ${missedPeriodCount} ${missedPeriodCount === 1 ? "class" : "classes"} missed` : ""
+    : attendanceSummary.headerCount > 0 ? ` · ${attendanceSummary.headerCount} ${attendanceSummary.headerLabel}` : "";
   const nextWorkingDay = getNextWorkingDay(clock, schoolClosedDays);
   const dashboardDate = new Intl.DateTimeFormat("en-IN", {
     weekday: "long",
@@ -287,6 +392,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const attendanceDialogRef = useRef<HTMLDialogElement>(null);
   const resetDialogRef = useRef<HTMLDialogElement>(null);
   const developerPasswordDialogRef = useRef<HTMLDialogElement>(null);
+  const swapDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const refreshClock = () => setClock(new Date());
@@ -307,10 +413,12 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     setAttendanceRecords(loadAttendanceRecords(attendanceDateKey, nextTimetable));
     setConductedPeriods(loadConductedPeriods(attendanceDateKey, nextTimetable));
     setProxyRequests(loadProxyRequests(attendanceDateKey, nextTimetable));
+    setSwapRequests(loadSwapRequests(attendanceDateKey, nextTimetable));
     setLoadedTimetableDateKey(attendanceDateKey);
     setLoadedAttendanceDateKey(attendanceDateKey);
     setLoadedConductedDateKey(attendanceDateKey);
     setLoadedProxyDateKey(attendanceDateKey);
+    setLoadedSwapDateKey(attendanceDateKey);
   }, [attendanceDateKey, loadedTimetableDateKey]);
 
   useEffect(() => {
@@ -323,6 +431,19 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
           changed = true;
         }
       }
+      return changed ? next : requests;
+    });
+  }, [scheduleMinute, timetable]);
+
+  useEffect(() => {
+    setSwapRequests((requests) => {
+      let changed = false;
+      const next = requests.map((request) => {
+        const period = timetable.find((item) => item.period === request.period);
+        if (request.status !== "pending" || !period || scheduleMinute < period.startMinute) return request;
+        changed = true;
+        return { ...request, status: "expired" as const };
+      });
       return changed ? next : requests;
     });
   }, [scheduleMinute, timetable]);
@@ -400,6 +521,35 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   }, [attendanceDateKey, loadedProxyDateKey, proxyRequests, timetable]);
 
   useEffect(() => {
+    if (loadedSwapDateKey !== attendanceDateKey) return;
+    try {
+      const storageKey = `hawk-swap-requests:${attendanceDateKey}`;
+      if (swapRequests.length > 0) window.localStorage.setItem(storageKey, JSON.stringify(swapRequests));
+      else window.localStorage.removeItem(storageKey);
+    } catch {
+      // Swap requests remain available for this session if local storage is unavailable.
+    }
+  }, [attendanceDateKey, loadedSwapDateKey, swapRequests]);
+
+  useEffect(() => {
+    const storageKey = `hawk-swap-requests:${attendanceDateKey}`;
+    function handleSwapRequestUpdate(event: StorageEvent) {
+      if (event.key !== storageKey || loadedSwapDateKey !== attendanceDateKey) return;
+      const incoming = parseSwapRequests(event.newValue, timetable);
+      const nameKey = teacherName.trim().toLocaleLowerCase();
+      const receivedNewRequest = incoming.find((request) => request.status === "pending" && request.recipientName.toLocaleLowerCase() === nameKey &&
+        !swapRequests.some((existing) => existing.id === request.id));
+      if (receivedNewRequest && typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification("Period swap request", { body: `${receivedNewRequest.requesterName} requested to swap ${receivedNewRequest.period}.` });
+      }
+      if (receivedNewRequest) setProxyNotification(`${receivedNewRequest.requesterName} requested a swap for ${receivedNewRequest.period}.`);
+      setSwapRequests(incoming);
+    }
+    window.addEventListener("storage", handleSwapRequestUpdate);
+    return () => window.removeEventListener("storage", handleSwapRequestUpdate);
+  }, [attendanceDateKey, loadedSwapDateKey, swapRequests, teacherName, timetable]);
+
+  useEffect(() => {
     if (!proxyNotification) return;
     const timer = window.setTimeout(() => setProxyNotification(""), 6500);
     return () => window.clearTimeout(timer);
@@ -453,6 +603,16 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   }, [resetDialogOpen]);
 
   useEffect(() => {
+    const dialog = swapDialogRef.current;
+    if (!dialog) return;
+    if (swapDialogTarget && !dialog.open) {
+      dialog.showModal();
+      dialog.querySelector<HTMLInputElement>("input")?.focus();
+    }
+    if (!swapDialogTarget && dialog.open) dialog.close();
+  }, [swapDialogTarget]);
+
+  useEffect(() => {
     const dialog = developerPasswordDialogRef.current;
     if (!dialog) return;
     if (developerPasswordOpen && !dialog.open) {
@@ -478,6 +638,61 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
       void Notification.requestPermission();
     }
+  }
+
+  function openSwapRequest(period: TimetablePeriod) {
+    setSwapDialogTarget(period);
+    setSwapRecipientName("");
+    setSwapDialogError("");
+  }
+
+  function submitSwapRequest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const recipientName = swapRecipientName.trim();
+    if (!swapDialogTarget || !recipientName) {
+      setSwapDialogError("Enter the teacher’s name to request a swap.");
+      return;
+    }
+    if (recipientName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase()) {
+      setSwapDialogError("Choose another teacher for the swap.");
+      return;
+    }
+    const existingRequest = swapRequests.find((request) => request.period === swapDialogTarget.period && request.status === "pending");
+    if (existingRequest) {
+      setSwapDialogError("A swap request is already pending for this period.");
+      return;
+    }
+    const request: SwapRequest = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      period: swapDialogTarget.period,
+      requesterName: teacherName.trim(),
+      recipientName,
+      status: "pending",
+      requestedAt: Date.now(),
+      requesterSubject: swapDialogTarget.subject,
+      requesterDetails: swapDialogTarget.details,
+      requesterStudents: swapDialogTarget.students,
+    };
+    setSwapRequests((requests) => [...requests.filter((item) => item.period !== request.period || item.status !== "pending"), request]);
+    setSwapDialogTarget(null);
+    if (typeof Notification !== "undefined" && Notification.permission === "default") void Notification.requestPermission();
+  }
+
+  function respondToSwapRequest(requestId: string, accept: boolean) {
+    const request = swapRequests.find((item) => item.id === requestId);
+    if (!request) return;
+    const period = timetable.find((item) => item.period === request.period);
+    if (!period) return;
+    if (scheduleMinute >= period.startMinute) {
+      setSwapRequests((requests) => requests.map((item) => item.id === requestId ? { ...item, status: "expired" } : item));
+      return;
+    }
+    setSwapRequests((requests) => requests.map((item) => item.id === requestId ? {
+      ...item,
+      status: accept ? "accepted" : "declined",
+      acceptedAt: accept ? Date.now() : undefined,
+      ...(accept ? { recipientSubject: period.subject, recipientDetails: period.details, recipientStudents: period.students } : {}),
+    } : item));
   }
 
   function cancelProxyRequest(period: TimetablePeriod) {
@@ -533,6 +748,17 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     setResetDialogOpen(true);
   }
 
+  function toggleDeveloperMode() {
+    if (developerMode) {
+      window.localStorage.removeItem("hawk-developer-mode");
+      setDeveloperMode(false);
+      return;
+    }
+    setDeveloperPassword("");
+    setDeveloperPasswordError("");
+    setDeveloperPasswordOpen(true);
+  }
+
   return (
     <div data-appearance={isDarkMode ? "dark" : "light"} className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex min-h-dvh w-full max-w-[1440px] flex-col border-x border-border bg-background shadow-[0_12px_48px_rgba(23,35,29,0.08)]">
@@ -585,7 +811,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <main ref={mainContentRef} className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-4 pb-44 pt-7 md:gap-9 md:px-8 md:pb-12 md:pt-10">
               <section data-ai-obstacle className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{dashboardDate}</h1>
-                <MetaText className="text-muted-foreground text-sm md:pb-1" value={`${attendanceSummary.totalClassCount} classes today${attendanceSummary.headerCount > 0 ? ` · ${attendanceSummary.headerCount} ${attendanceSummary.headerLabel}` : ""}`} />
+                {!allPeriodsEnded && <MetaText className="text-muted-foreground text-sm md:pb-1" value={`${attendanceSummary.totalClassCount} classes today${dailySummarySuffix}`} />}
               </section>
 
               <div className="grid gap-7 md:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.9fr)] md:gap-8">
@@ -594,13 +820,37 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <section data-ai-obstacle className={`rounded-[28px] p-5 md:p-6 ${dayComplete ? "border border-border bg-card text-foreground" : "bg-primary-container text-on-primary-container"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    {dayComplete ? (
+                    {allPeriodsEnded ? (
+                      <>
+                        <h2 className="text-xl font-semibold tracking-tight">No more classes today</h2>
+                        <p className="mt-2 text-sm font-normal text-on-primary-container/80">View timetable for more info</p>
+                        {dayComplete && (
+                          <>
+                            <p className="mt-3 flex items-center text-sm text-muted-foreground">
+                              {takenPeriodCount} of {attendanceSummary.totalClassCount} periods taken
+                              <span aria-hidden="true" className="mx-2 inline-block size-1 rounded-full bg-current" />
+                              <span className={missedPeriodCount > 0 ? "font-medium text-[#7D3F13]" : ""}>{missedPeriodCount} missed</span>
+                            </p>
+                            {attendanceDutyCount > 0 && (
+                              <p className="mt-2 text-sm text-muted-foreground">Attendance marked: {attendanceMarkedCount} of {attendanceDutyCount}</p>
+                            )}
+                          </>
+                        )}
+                      </>
+                    ) : dayComplete ? (
                       <>
                         <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-muted-foreground">
                           <Check aria-hidden="true" className="size-3.5" />
                           DAY COMPLETE
                         </div>
-                        <MetaText className="mt-2 block text-sm text-muted-foreground" value={`${attendanceSummary.markedCount} of ${attendanceSummary.totalClassCount} periods marked · ${attendanceSummary.missedCount} missed`} />
+                        <p className="mt-2 flex items-center text-sm text-muted-foreground">
+                          {takenPeriodCount} of {attendanceSummary.totalClassCount} periods taken
+                          <span aria-hidden="true" className="mx-2 inline-block size-1 rounded-full bg-current" />
+                          <span className={missedPeriodCount > 0 ? "font-medium text-[#7D3F13]" : ""}>{missedPeriodCount} missed</span>
+                        </p>
+                        {attendanceDutyCount > 0 && (
+                          <p className="mt-2 text-sm text-muted-foreground">Attendance marked: {attendanceMarkedCount} of {attendanceDutyCount}</p>
+                        )}
                         {firstScheduledPeriod && (
                           <MetaText
                             className="mt-2 block text-sm"
@@ -682,7 +932,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       </p>
                     )}
                   </>
-                ) : activePeriod?.period === "P1" && !activePeriodAttendance ? (
+                ) : activePeriod && hasAttendanceRights(activePeriod, proxyAttendanceRights) && !activePeriodAttendance ? (
                   <button
                     type="button"
                     onClick={() => openAttendance(activePeriod)}
@@ -713,29 +963,25 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <section id="today-classes" data-ai-obstacle className="flex flex-col gap-3 scroll-mt-24">
                 <div className="flex justify-between items-center">
                   <h2 className="text-base font-semibold tracking-tight">Today's classes</h2>
-                  <button type="button" className="font-normal text-icon-accent text-sm hover:underline underline-offset-4">
-                    View timetable
-                  </button>
+                  {!allPeriodsEnded && (
+                    <button type="button" className="font-normal text-icon-accent text-sm hover:underline underline-offset-4">
+                      View timetable
+                    </button>
+                  )}
                 </div>
 
                 <div className="overflow-hidden rounded-[24px] border border-border bg-card">
-                  {timetable.map((p, index) => {
-                    const attendance = visibleAttendanceRecords[p.period];
-                    const periodState = getPeriodState(p, scheduleMinute);
-                    const canMarkAttendance = hasAttendanceRights(p, proxyAttendanceRights);
+                  {periodStatuses.map(({ period: p, attendance, state: periodState, canMarkAttendance, proxyRequestStatus, isConducted, isSelfConducted, isRequestExpired, isMissed, isAttendancePending }, index) => {
                     const proxyRequest = proxyRequests[p.period];
-                    const proxyRequestStatus = getProxyRequestStatus(proxyRequest, p, attendanceDateKey, scheduleMinute);
                     const isProxyAccepted = proxyRequestStatus === "accepted";
-                    const isConducted = isPeriodConducted(p, conductedPeriods, attendanceDateKey, scheduleMinute);
                     const isPastPeriod = periodState === "grace" || periodState === "done";
-                    const isAttendancePending = canMarkAttendance && !attendance && periodState === "grace" && proxyRequestStatus !== "expired";
-                    const isSelfConducted = proxyRequestStatus === "expired" && isConducted && !p.isProxy;
-                    const isRequestExpired = proxyRequestStatus === "expired" && !isConducted && periodState !== "done";
-                    const isMissed = !attendance && !isConducted && (
-                      (periodState === "done" && (canMarkAttendance || proxyRequestStatus === "expired")) ||
-                      (!p.isOwnClass && !p.isProxy && (periodState === "grace" || periodState === "done"))
-                    );
-                    const canRequestProxy = activePeriodIndex >= 0 && index === activePeriodIndex + 1 && p.period !== "P1" && periodState === "upcoming" && !p.isOwnClass && !p.isProxy && !proxyRequestStatus;
+                    const matchingSwap = swapRequests.find((request) => request.period === p.period &&
+                      (request.requesterName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase() || request.recipientName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase()) &&
+                      (request.status === "pending" || request.status === "accepted"));
+                    const isOutgoingSwapPending = matchingSwap?.status === "pending" && matchingSwap.requesterName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase();
+                    const incomingSwapRequest = matchingSwap?.status === "pending" && matchingSwap.recipientName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase() ? matchingSwap : undefined;
+                    const canRequestProxy = p.period !== "P1" && p.isOwnClass === true && periodState === "upcoming" && scheduleMinute >= p.startMinute - proxyRequestWindowMinutes && !proxyRequestStatus;
+                    const canRequestSwap = p.isOwnClass === true && periodState === "upcoming" && !matchingSwap && !p.isProxy;
                     const periodDetails = isProxyAccepted
                       ? `${p.details} · Covered by ${proxyRequest?.coveringTeacherName?.trim() || "Covering teacher"}`
                       : p.details;
@@ -760,19 +1006,31 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-2 md:gap-y-1">
                             <MetaText className={`${isPastPeriod ? "text-[#68716c]" : "text-foreground"} text-sm leading-relaxed`} value={periodDetails} />
-                            {(p.isProxy || isAttendancePending || isMissed || (!canMarkAttendance && isConducted) || proxyRequestStatus === "pending" || isRequestExpired || isSelfConducted || isProxyAccepted) && (
+                            {(p.isProxy || p.isSwap || isAttendancePending || isMissed || (!canMarkAttendance && isConducted) || proxyRequestStatus === "pending" || isRequestExpired || isSelfConducted || isProxyAccepted || isOutgoingSwapPending || incomingSwapRequest) && (
                               <span className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap ${p.isProxy ? "" : "basis-full md:basis-auto"} ${isPastPeriod ? "opacity-85" : ""}`}>
+                                {p.isSwap && <span className="inline-flex rounded-full border border-[#47764f] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#47764f]">Swap</span>}
                                 {p.isProxy && !isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
                                 {proxyRequestStatus === "pending" && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Proxy pending</span>}
+                                {isOutgoingSwapPending && <span className="inline-flex rounded-full border border-[#FCD34D] bg-[#FEF3C7] px-2 py-0.5 text-[12px] font-medium text-[#92400E]">Swap pending</span>}
                                 {isRequestExpired && <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Request Expired</span>}
                                 {isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
                                 {isAttendancePending && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Attendance pending</span>}
                                 {isMissed && <span className="inline-flex items-center gap-1 rounded-full border border-accent-foreground bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
                                 {isSelfConducted && <span className="inline-flex items-center rounded-full border border-[#47764f] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#47764f]">Self-conducted</span>}
-                                {!isSelfConducted && !isRequestExpired && !isMissed && isConducted && <span className="inline-flex items-center rounded-full border border-[#47764f] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#47764f]">Conducted</span>}
+                                {!p.isSwap && !isSelfConducted && !isRequestExpired && !isMissed && isConducted && <span className="inline-flex items-center rounded-full border border-[#47764f] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#47764f]">Conducted</span>}
                               </span>
                             )}
                           </div>
+                          {incomingSwapRequest && (
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <span className="text-sm text-muted-foreground">Swap request from {incomingSwapRequest.requesterName}</span>
+                              <button type="button" onClick={() => respondToSwapRequest(incomingSwapRequest.id, true)} className="inline-flex min-h-9 items-center rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground">Accept</button>
+                              <button type="button" onClick={() => respondToSwapRequest(incomingSwapRequest.id, false)} className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-sm font-medium text-foreground hover:bg-muted">Decline</button>
+                            </div>
+                          )}
+                          {canRequestSwap && (
+                            <button type="button" onClick={() => openSwapRequest(p)} className="mt-2 inline-flex min-h-9 items-center rounded-full border border-border px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Request Swap</button>
+                          )}
                           {canRequestProxy && (
                             <button
                               type="button"
@@ -924,20 +1182,27 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     </button>
                   </div>
                 </section>
-                  <section data-ai-obstacle className={`rounded-[24px] border bg-card p-5 md:p-6 ${developerMode ? "" : "opacity-70"}`}>
+                  <section data-ai-obstacle className="rounded-[24px] border bg-card p-5 md:p-6">
                     <div className="flex items-center justify-between gap-4">
                       <div className="min-w-0">
                         <h2 className="text-base font-semibold">Reset periods</h2>
                         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Resets today’s timetable to start 10 minutes from now (IST).</p>
                         <p className="mt-1 text-xs font-medium text-muted-foreground">{developerMode ? "Developer mode enabled" : "Developer only"}</p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => developerMode ? setResetDialogOpen(true) : setDeveloperPasswordOpen(true)}
-                        className={`inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border px-4 text-sm font-medium transition-colors ${developerMode ? "border-border bg-background text-foreground hover:bg-muted" : "border-border bg-muted text-muted-foreground hover:bg-muted"}`}
-                      >
-                        Reset
-                      </button>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-sm font-normal text-muted-foreground">{developerMode ? "On" : "Off"}</span>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-label="Developer mode and reset periods"
+                          aria-checked={developerMode}
+                          onClick={toggleDeveloperMode}
+                          className="relative flex h-11 w-[52px] shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-offset-2"
+                        >
+                          <span className={`h-6 w-11 rounded-full transition-colors ${developerMode ? "bg-primary" : "bg-muted"}`} />
+                          <span className={`absolute left-1.5 top-1/2 size-[18px] -translate-y-1/2 rounded-full bg-white shadow-sm transition-transform ${developerMode ? "translate-x-5" : "translate-x-0"}`} />
+                        </button>
+                      </div>
                     </div>
                   </section>
                 <section data-ai-obstacle className="rounded-[24px] border bg-card p-5 md:p-6">
@@ -983,6 +1248,32 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               </button>
             ))}
           </nav>
+
+          <dialog
+            ref={swapDialogRef}
+            aria-labelledby="swap-request-title"
+            onCancel={(event) => { event.preventDefault(); setSwapDialogTarget(null); setSwapDialogError(""); }}
+            onClick={(event) => { if (event.target === swapDialogRef.current) { setSwapDialogTarget(null); setSwapDialogError(""); } }}
+            className="m-auto w-[calc(100%-32px)] max-w-sm rounded-2xl border border-border bg-card p-0 text-foreground shadow-2xl backdrop:bg-foreground/50"
+          >
+            {swapDialogTarget && (
+              <form onSubmit={submitSwapRequest} className="flex flex-col gap-4 p-5">
+                <div>
+                  <h2 id="swap-request-title" className="text-base font-semibold">Request a period swap</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{swapDialogTarget.period} · {swapDialogTarget.subject}</p>
+                </div>
+                <label htmlFor="swap-recipient" className="flex flex-col gap-1.5 text-sm font-medium">
+                  Teacher’s name
+                  <input id="swap-recipient" required value={swapRecipientName} onChange={(event) => { setSwapRecipientName(event.target.value); setSwapDialogError(""); }} className="min-h-12 rounded-xl border border-border bg-background px-4 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-primary" />
+                </label>
+                {swapDialogError && <p role="alert" className="text-sm text-destructive">{swapDialogError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <button type="button" onClick={() => setSwapDialogTarget(null)} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                  <button type="submit" className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Send request</button>
+                </div>
+              </form>
+            )}
+          </dialog>
 
           <dialog
             ref={developerPasswordDialogRef}
@@ -1056,6 +1347,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       present,
                       total,
                       markedAt: Date.now(),
+                      markedBy: teacherName,
                       periodStartMinute: attendanceTarget.startMinute,
                     },
                   }));

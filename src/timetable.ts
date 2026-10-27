@@ -8,9 +8,11 @@ export type TimetablePeriod = {
   students?: number;
   isProxy?: boolean;
   isOwnClass?: boolean;
+  isSwap?: boolean;
+  swappedWith?: string;
 };
 
-export type AttendanceRecord = { marked?: true; present: number; total: number; markedAt?: number; periodStartMinute?: number };
+export type AttendanceRecord = { marked?: true; present: number; total: number; markedAt?: number; markedBy?: string; periodStartMinute?: number };
 export type PeriodState = "upcoming" | "running" | "grace" | "done";
 export type ClosedDayConfig = {
   /** JavaScript weekday numbers: Sunday = 0 through Saturday = 6. */
@@ -95,7 +97,7 @@ export function getPeriodState(
 }
 
 export function hasAttendanceRights(period: TimetablePeriod, proxyRights: boolean) {
-  return period.isOwnClass === true || (period.isProxy === true && proxyRights);
+  return period.isOwnClass === true || period.isSwap === true || (period.isProxy === true && proxyRights);
 }
 
 export type TodaysAttendanceSummary = {
