@@ -731,7 +731,10 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     const isAttendancePending = canMarkAttendance && !attendance && periodState === "grace" && proxyRequestStatus !== "expired";
                     const isSelfConducted = proxyRequestStatus === "expired" && isConducted && !p.isProxy;
                     const isRequestExpired = proxyRequestStatus === "expired" && !isConducted && periodState !== "done";
-                    const isMissed = !attendance && !isConducted && periodState === "done" && (canMarkAttendance || proxyRequestStatus === "expired");
+                    const isMissed = !attendance && !isConducted && (
+                      (periodState === "done" && (canMarkAttendance || proxyRequestStatus === "expired")) ||
+                      (!p.isOwnClass && !p.isProxy && (periodState === "grace" || periodState === "done"))
+                    );
                     const canRequestProxy = activePeriodIndex >= 0 && index === activePeriodIndex + 1 && p.period !== "P1" && periodState === "upcoming" && !p.isOwnClass && !p.isProxy && !proxyRequestStatus;
                     const periodDetails = isProxyAccepted
                       ? `${p.details} · Covered by ${proxyRequest?.coveringTeacherName?.trim() || "Covering teacher"}`
@@ -764,7 +767,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                                 {isRequestExpired && <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[12px] font-medium text-muted-foreground">Request Expired</span>}
                                 {isProxyAccepted && <span className="inline-flex rounded-full border border-secondary-foreground bg-secondary px-2 py-0.5 text-[12px] font-medium text-secondary-foreground">Proxy</span>}
                                 {isAttendancePending && <span className="inline-flex rounded-full border border-[#d6ae3b] bg-[#fff8e1] px-2 py-0.5 text-[12px] font-medium text-[#6b4f00]">Attendance pending</span>}
-                                {isMissed && <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
+                                {isMissed && <span className="inline-flex items-center gap-1 rounded-full border border-accent-foreground bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-foreground">Missed</span>}
                                 {isSelfConducted && <span className="inline-flex items-center rounded-full border border-[#78a878] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#245d42]">Self-conducted</span>}
                                 {!isSelfConducted && !isRequestExpired && !isMissed && isConducted && <span className="inline-flex items-center rounded-full border border-[#78a878] bg-[#e8f3e8] px-2 py-0.5 text-[12px] font-medium text-[#245d42]">Conducted</span>}
                               </span>
@@ -780,7 +783,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                             </button>
                           )}
                           {canMarkAttendance && attendance && periodState !== "upcoming" && (
-                            <span className={`mt-1.5 inline-flex items-center gap-1 text-sm font-normal ${isPastPeriod ? "text-[#68716c]" : "text-icon-accent"}`}>
+                            <span className="mt-1.5 inline-flex items-center gap-1 text-sm font-normal text-[#245d42]">
                               <Check aria-hidden="true" className="size-3.5" />
                               {attendance.present}/{attendance.total} present
                             </span>
