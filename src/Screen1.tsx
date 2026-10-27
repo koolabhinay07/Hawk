@@ -248,17 +248,11 @@ function getProxyRequestStatus(request: ProxyRequest | undefined, period: Timeta
 }
 
 function isMissedPeriod(
-  period: TimetablePeriod,
   periodState: ReturnType<typeof getPeriodState>,
   attendance: AttendanceRecord | undefined,
-  isConducted: boolean,
   canMarkAttendance: boolean,
-  proxyRequestExpired: boolean,
 ) {
-  return !attendance && !isConducted && (
-    (periodState === "done" && (canMarkAttendance || proxyRequestExpired)) ||
-    (!period.isOwnClass && !period.isProxy && (periodState === "grace" || periodState === "done"))
-  );
+  return canMarkAttendance && !attendance && periodState === "done";
 }
 
 function getOwnClassSummary(period: TimetablePeriod) {
@@ -344,8 +338,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     const isConducted = isPeriodConducted(period, conductedPeriods, attendanceDateKey, scheduleMinute);
     const isSelfConducted = proxyRequestStatus === "expired" && isConducted && !period.isProxy;
     const isRequestExpired = proxyRequestStatus === "expired" && !isConducted && state !== "done";
-    const isMissed = isMissedPeriod(period, state, attendance, isConducted, canMarkAttendance, proxyRequestStatus === "expired");
-    const isAttendancePending = canMarkAttendance && !attendance && state === "grace" && proxyRequestStatus !== "expired";
+    const isMissed = isMissedPeriod(state, attendance, canMarkAttendance);
+    const isAttendancePending = canMarkAttendance && !attendance && state === "grace";
     return { period, attendance, state, canMarkAttendance, proxyRequestStatus, isConducted, isSelfConducted, isRequestExpired, isMissed, isAttendancePending };
   });
   const activePeriodIndex = effectiveTimetable.findIndex((period) => scheduleMinute >= period.startMinute && scheduleMinute < period.endMinute);
@@ -980,6 +974,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       (request.status === "pending" || request.status === "accepted"));
                     const isOutgoingSwapPending = matchingSwap?.status === "pending" && matchingSwap.requesterName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase();
                     const incomingSwapRequest = matchingSwap?.status === "pending" && matchingSwap.recipientName.toLocaleLowerCase() === teacherName.trim().toLocaleLowerCase() ? matchingSwap : undefined;
+                    const canShowAttendanceCta = canMarkAttendance && !attendance && (periodState === "running" || periodState === "grace") && matchingSwap?.status !== "pending";
                     const canRequestProxy = p.period !== "P1" && p.isOwnClass === true && periodState === "upcoming" && scheduleMinute >= p.startMinute - proxyRequestWindowMinutes && !proxyRequestStatus;
                     const canRequestSwap = p.isOwnClass === true && periodState === "upcoming" && !matchingSwap && !p.isProxy;
                     const periodDetails = isProxyAccepted
@@ -1038,6 +1033,15 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                               className="mt-2 inline-flex min-h-9 w-fit self-start items-center justify-center whitespace-nowrap rounded-full border border-border bg-transparent px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                             >
                               Request Proxy
+                            </button>
+                          )}
+                          {canShowAttendanceCta && (
+                            <button
+                              type="button"
+                              onClick={() => openAttendance(p)}
+                              className="mt-2 inline-flex min-h-9 w-fit items-center justify-center whitespace-nowrap rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                            >
+                              Mark Attendance
                             </button>
                           )}
                           {canMarkAttendance && attendance && periodState !== "upcoming" && (
