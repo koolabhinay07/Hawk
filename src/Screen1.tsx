@@ -37,6 +37,10 @@ const navItems = [
   { icon: User, label: "Profile" },
 ];
 const proxyRequestWindowMinutes = 10;
+type HeroSelection = {
+  kind: "active" | "grace" | "upcoming" | "marked" | "dayComplete" | "dayEnded";
+  periodId?: string;
+};
 
 function MetaText({ value, className }: { value: string; className: string }) {
   return (
@@ -342,13 +346,6 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const activePeriod = activePeriodIndex >= 0 ? effectiveTimetable[activePeriodIndex] : undefined;
   const activePeriodAttendance = activePeriod ? visibleAttendanceRecords[activePeriod.period] : undefined;
   const activePeriodConducted = activePeriod ? isPeriodConducted(activePeriod, conductedPeriods, attendanceDateKey, scheduleMinute) : false;
-  const activePeriodLabel = activePeriodAttendance
-    ? "Attendance marked"
-    : activePeriod?.period === "P1"
-      ? "Attendance pending"
-      : activePeriodConducted
-        ? "Conducted"
-        : "Ongoing";
   const gracePeriodStatus = periodStatuses
     .filter(({ state, canMarkAttendance, attendance, isConducted }) =>
       state === "grace" && ((canMarkAttendance && !attendance) || (!canMarkAttendance && !isConducted)),
@@ -380,6 +377,32 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
     ? missedPeriodCount > 0 ? ` · ${missedPeriodCount} ${missedPeriodCount === 1 ? "class" : "classes"} missed` : ""
     : attendanceSummary.headerCount > 0 ? ` · ${attendanceSummary.headerCount} ${attendanceSummary.headerLabel}` : "";
   const nextWorkingDay = getNextWorkingDay(clock, schoolClosedDays);
+  const desiredHeroSelection: HeroSelection = allPeriodsEnded && !gracePeriodStatus
+    ? { kind: "dayEnded" }
+    : dayComplete
+      ? { kind: "dayComplete" }
+      : activePeriod
+        ? { kind: "active", periodId: activePeriod.period }
+        : gracePeriodStatus
+          ? { kind: "grace", periodId: gracePeriodStatus.period.period }
+          : nextUpcomingPeriod
+            ? { kind: "upcoming", periodId: nextUpcomingPeriod.period }
+            : recentlyMarkedPeriod
+              ? { kind: "marked", periodId: recentlyMarkedPeriod.period }
+              : heroPeriod
+                ? { kind: "upcoming", periodId: heroPeriod.period }
+                : { kind: "dayEnded" };
+  const shownHeroSelection = desiredHeroSelection;
+  const shownHeroPeriod = shownHeroSelection.periodId
+    ? effectiveTimetable.find((period) => period.period === shownHeroSelection.periodId)
+    : undefined;
+  const shownHeroStatus = shownHeroPeriod
+    ? periodStatuses.find(({ period }) => period.period === shownHeroPeriod.period)
+    : undefined;
+  const shownActivePeriod = shownHeroSelection.kind === "active" ? shownHeroPeriod : undefined;
+  const shownGracePeriodStatus = shownHeroSelection.kind === "grace" ? shownHeroStatus : undefined;
+  const shownActiveAttendance = shownHeroStatus?.attendance;
+  const shownActiveConducted = shownHeroStatus?.isConducted ?? false;
   const dashboardDate = new Intl.DateTimeFormat("en-IN", {
     weekday: "long",
     day: "numeric",
@@ -391,7 +414,6 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   const resetDialogRef = useRef<HTMLDialogElement>(null);
   const developerPasswordDialogRef = useRef<HTMLDialogElement>(null);
   const swapDialogRef = useRef<HTMLDialogElement>(null);
-
   useEffect(() => {
     const refreshClock = () => setClock(new Date());
     const timer = window.setInterval(refreshClock, 1_000);
@@ -819,10 +841,13 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <div className="grid gap-7 md:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.9fr)] md:gap-8">
               <div className="flex min-w-0 flex-col gap-7 md:gap-8">
 
-              <section data-ai-obstacle className={`rounded-[28px] p-5 md:p-6 ${dayComplete ? "border border-border bg-card text-foreground" : "bg-primary-container text-on-primary-container"}`}>
+              <section
+                data-ai-obstacle
+                className={`rounded-[28px] p-5 md:p-6 ${shownHeroSelection.kind === "dayComplete" || shownHeroSelection.kind === "dayEnded" ? "border border-border bg-card text-foreground" : "bg-primary-container text-on-primary-container"}`}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    {allPeriodsEnded && !gracePeriodStatus ? (
+                    {shownHeroSelection.kind === "dayEnded" ? (
                       <>
                         <h2 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
                           No more classes<br className="sm:hidden" /> today
@@ -840,7 +865,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                           </>
                         )}
                       </>
-                    ) : dayComplete ? (
+                    ) : shownHeroSelection.kind === "dayComplete" ? (
                       <>
                         <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-muted-foreground">
                           <Check aria-hidden="true" className="size-3.5" />
@@ -861,78 +886,86 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                           />
                         )}
                       </>
-                    ) : activePeriod ? (
+                    ) : shownActivePeriod && shownHeroStatus ? (
                       <>
                         <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
-                          {activePeriodLabel === "Attendance marked" || activePeriodLabel === "Conducted"
+                          {shownActiveAttendance || (shownActivePeriod.period !== "P1" && shownActiveConducted)
                             ? <CheckCheck aria-hidden="true" className="size-3.5" />
                             : <Clock aria-hidden="true" className="size-3.5" />}
-                          {activePeriodLabel}
+                          {shownActiveAttendance ? "Attendance marked" : shownActivePeriod.period === "P1" ? "Attendance pending" : shownActiveConducted ? "Conducted" : "Ongoing"}
                         </div>
-                        {activePeriod.isOwnClass ? (
+                        {shownActivePeriod.isOwnClass ? (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{activePeriod.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{shownActivePeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{shownActivePeriod.subject}</h2>
                             <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
-                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(activePeriod)} />
+                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(shownActivePeriod)} />
                           </>
                         ) : (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{activePeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{activePeriod.subject}</h2>
-                            <MetaText className="text-sm text-on-primary-container/80" value={activePeriod.details} />
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{shownActivePeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{shownActivePeriod.subject}</h2>
+                            <MetaText className="text-sm text-on-primary-container/80" value={shownActivePeriod.details} />
                           </>
                         )}
                       </>
-                    ) : gracePeriodStatus ? (
+                    ) : shownGracePeriodStatus ? (
                       <>
                         <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
-                          {gracePeriodStatus.attendance || gracePeriodStatus.isConducted
+                          {shownGracePeriodStatus.attendance || shownGracePeriodStatus.isConducted
                             ? <CheckCheck aria-hidden="true" className="size-3.5" />
                             : <Clock aria-hidden="true" className="size-3.5" />}
-                          {gracePeriodStatus.attendance ? "Attendance marked" : gracePeriodStatus.isConducted ? "Conducted" : "Grace period"}
+                          {shownGracePeriodStatus.attendance
+                            ? "Attendance marked"
+                            : shownGracePeriodStatus.isConducted
+                              ? "Conducted"
+                              : shownGracePeriodStatus.isMissed
+                                ? "Missed"
+                              : shownGracePeriodStatus.canMarkAttendance
+                                ? "Attendance pending"
+                                : "Grace period"}
                         </div>
-                        {gracePeriodStatus.period.isOwnClass ? (
+                        {shownGracePeriodStatus.period.isOwnClass ? (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{gracePeriodStatus.period.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{shownGracePeriodStatus.period.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{shownGracePeriodStatus.period.subject}</h2>
                             <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
-                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(gracePeriodStatus.period)} />
+                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(shownGracePeriodStatus.period)} />
                           </>
                         ) : (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{gracePeriodStatus.period.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{gracePeriodStatus.period.subject}</h2>
-                            <MetaText className="text-sm text-on-primary-container/80" value={gracePeriodStatus.period.details} />
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{shownGracePeriodStatus.period.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{shownGracePeriodStatus.period.subject}</h2>
+                            <MetaText className="text-sm text-on-primary-container/80" value={shownGracePeriodStatus.period.details} />
                           </>
                         )}
                       </>
-                    ) : heroPeriod ? (
+                    ) : shownHeroPeriod ? (
                       <>
                         <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.04em] text-on-primary-container">
-                          {recentlyMarkedPeriod
+                          {shownHeroSelection.kind === "marked"
                             ? <CheckCheck aria-hidden="true" className="size-3.5" />
                             : <Clock aria-hidden="true" className="size-3.5" />}
-                          {recentlyMarkedPeriod ? "Attendance marked" : nextUpcomingPeriod ? "Up next" : "No more classes today"}
+                          {shownHeroSelection.kind === "marked" ? "Attendance marked" : "Up next"}
                         </div>
-                        {heroPeriod.isOwnClass ? (
+                        {shownHeroPeriod.isOwnClass ? (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{heroPeriod.subject}</h2>
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{shownHeroPeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{shownHeroPeriod.subject}</h2>
                             <p className="mt-2 text-sm font-semibold text-on-primary-container">Your Class</p>
-                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(heroPeriod)} />
+                            <MetaText className="text-sm font-medium text-on-primary-container/80" value={getOwnClassSummary(shownHeroPeriod)} />
                           </>
                         ) : (
                           <>
-                            <h2 className="mt-2 text-base font-semibold tracking-tight">{heroPeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{heroPeriod.subject}</h2>
-                            <MetaText className="text-sm text-on-primary-container/80" value={heroPeriod.details} />
+                            <h2 className="mt-2 text-base font-semibold tracking-tight">{shownHeroPeriod.period}<span aria-hidden="true" className="mx-2 inline-block size-1.5 rounded-full bg-current align-middle" />{shownHeroPeriod.subject}</h2>
+                            <MetaText className="text-sm text-on-primary-container/80" value={shownHeroPeriod.details} />
                           </>
                         )}
                       </>
                     ) : null}
                   </div>
-                  {!dayComplete && activePeriod && (
+                  {shownActivePeriod && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-card/75 px-3 py-1.5 text-[12px] font-medium text-status-foreground">
-                      {activePeriodAttendance ? "Marked" : activePeriodConducted ? "Conducted" : "Now"}
+                      {shownActiveAttendance ? "Marked" : shownActiveConducted ? "Conducted" : "Now"}
                     </span>
                   )}
                 </div>
-                {dayComplete ? (
+                {shownHeroSelection.kind === "dayComplete" || shownHeroSelection.kind === "dayEnded" ? (
                   <>
                     <button
                       type="button"
@@ -956,34 +989,34 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       </p>
                     )}
                   </>
-                ) : activePeriod && hasAttendanceRights(activePeriod, proxyAttendanceRights) && !activePeriodAttendance ? (
+                ) : shownActivePeriod && shownHeroStatus?.canMarkAttendance && !shownActiveAttendance ? (
                   <button
                     type="button"
-                    onClick={() => openAttendance(activePeriod)}
+                    onClick={() => openAttendance(shownActivePeriod)}
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark Attendance
                   </button>
-                ) : activePeriod && activePeriod.period !== "P1" && !activePeriodConducted ? (
+                ) : shownActivePeriod && shownActivePeriod.period !== "P1" && !shownActiveConducted ? (
                   <button
                     type="button"
-                    onClick={() => setConductedPeriods((periods) => ({ ...periods, [activePeriod.period]: Date.now() }))}
+                    onClick={() => setConductedPeriods((periods) => ({ ...periods, [shownActivePeriod.period]: Date.now() }))}
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark as Conducted
                   </button>
-                ) : gracePeriodStatus && gracePeriodStatus.canMarkAttendance && !gracePeriodStatus.attendance ? (
+                ) : shownGracePeriodStatus && shownGracePeriodStatus.canMarkAttendance && !shownGracePeriodStatus.attendance ? (
                   <button
                     type="button"
-                    onClick={() => openAttendance(gracePeriodStatus.period)}
+                    onClick={() => openAttendance(shownGracePeriodStatus.period)}
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark Attendance
                   </button>
-                ) : gracePeriodStatus && !gracePeriodStatus.canMarkAttendance && !gracePeriodStatus.isConducted ? (
+                ) : shownGracePeriodStatus && !shownGracePeriodStatus.canMarkAttendance && !shownGracePeriodStatus.isConducted ? (
                   <button
                     type="button"
-                    onClick={() => setConductedPeriods((periods) => ({ ...periods, [gracePeriodStatus.period.period]: Date.now() }))}
+                    onClick={() => setConductedPeriods((periods) => ({ ...periods, [shownGracePeriodStatus.period.period]: Date.now() }))}
                     className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#d6ae3b] bg-[#fff8e1] px-5 text-base font-semibold text-[#6b4f00] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Mark class as conducted?
