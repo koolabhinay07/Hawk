@@ -344,8 +344,6 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   });
   const activePeriodIndex = effectiveTimetable.findIndex((period) => scheduleMinute >= period.startMinute && scheduleMinute < period.endMinute);
   const activePeriod = activePeriodIndex >= 0 ? effectiveTimetable[activePeriodIndex] : undefined;
-  const activePeriodAttendance = activePeriod ? visibleAttendanceRecords[activePeriod.period] : undefined;
-  const activePeriodConducted = activePeriod ? isPeriodConducted(activePeriod, conductedPeriods, attendanceDateKey, scheduleMinute) : false;
   const gracePeriodStatus = periodStatuses
     .filter(({ state, canMarkAttendance, attendance, isConducted }) =>
       state === "grace" && ((canMarkAttendance && !attendance) || (!canMarkAttendance && !isConducted)),
