@@ -8,6 +8,7 @@ import {
   Mail,
   ShieldCheck,
 } from "lucide-react";
+import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
 
 type FlowScreen = "intro" | "login" | "signup" | "email-verify" | "email-verified" | "invite" | "forgot" | "forgot-verify" | "reset";
 
@@ -15,7 +16,7 @@ const slides = [
   {
     eyebrow: "A better school day starts here",
     title: "Your school day, Simplified.",
-    body: "From attendance to results — your whole school day in one place.",
+    body: "From attendance to proxies — everything a teacher needs, in one place.",
     points: ["Mark attendance instantly", "Send notices to parents instantly", "Track your class results"],
   },
   {
@@ -251,16 +252,19 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
   const filledButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
   const outlinedButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
   const isIntro = screen === "intro";
+  const isFirstIntroSlide = isIntro && slideIndex === 0;
   const showLoginHeader = screen === "login" || screen === "signup";
 
   return (
-    <main className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]">
-      <ShowcasePanel screen={screen} slideIndex={slideIndex} />
+    <main className={`grid min-h-dvh bg-background text-foreground ${isFirstIntroSlide ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}`}>
+      <div className={isFirstIntroSlide ? "hidden" : "contents"}>
+        <ShowcasePanel screen={screen} slideIndex={slideIndex} />
+      </div>
       <section className="flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[560px] grow flex-col px-5 py-6 sm:px-10 sm:py-9 lg:px-12 lg:py-10">
+        <div className={`mx-auto flex w-full max-w-[560px] grow flex-col ${isFirstIntroSlide ? "px-6 py-6 sm:px-6 lg:px-6" : "px-5 py-6 sm:px-10 sm:py-9 lg:px-12 lg:py-10"}`}>
           <div className="flex items-center justify-between">
-            <div className="lg:hidden"><Brand /></div>
-            <div className="hidden lg:block" />
+            <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
+            {!isFirstIntroSlide && <div className="hidden lg:block" />}
             {showLoginHeader ? (
               <div className="flex items-center rounded-full bg-muted p-1" role="tablist" aria-label="Account access">
                 <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Log in</button>
@@ -271,22 +275,25 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             ) : <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>}
           </div>
 
-          <div className="my-auto py-10">
+          <div className={isFirstIntroSlide ? "flex-1 pt-8" : "my-auto py-10"}>
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out]">
-                <p className="mb-2 text-sm font-semibold text-icon-accent">{slide.eyebrow}</p>
-                <h1 className="max-w-xl text-3xl font-bold leading-tight tracking-tight md:text-4xl">{slide.title}</h1>
-                <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
-                {slideIndex === 0 ? (
-                  <ul className="mt-5 grid gap-4">
-                    {slide.points.map((point) => (
-                      <li key={point} className="flex items-start gap-3 text-base leading-6 text-foreground">
-                        <span aria-hidden="true" className="mt-2.5 size-2 shrink-0 rounded-full bg-primary" />
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
+                {isFirstIntroSlide && (
+                  <div className="flex h-[min(55dvh,480px)] items-center justify-center">
+                    <img src={onboardingSlideOne} alt="" className="h-full w-full object-contain" />
+                  </div>
+                )}
+                {isFirstIntroSlide && (
+                  <div className="-mt-20 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                    {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
+                  </div>
+                )}
+                <div className={isFirstIntroSlide ? "mt-6 text-center" : ""}>
+                  {!isFirstIntroSlide && <p className="mb-2 text-sm font-semibold text-icon-accent">{slide.eyebrow}</p>}
+                  <h1 className={`max-w-xl text-3xl font-bold leading-tight tracking-tight md:text-4xl ${isFirstIntroSlide ? "mx-auto" : ""}`}>{slide.title}</h1>
+                  <p className={`mt-4 max-w-lg text-base leading-7 text-muted-foreground ${isFirstIntroSlide ? "mx-auto" : ""}`}>{slide.body}</p>
+                </div>
+                {!isFirstIntroSlide && (
                   <div className="mt-7 rounded-3xl border border-border bg-card p-5 sm:p-6">
                     <div><p className="text-base font-semibold">A thoughtful workspace for teachers</p><p className="mt-1 text-sm text-muted-foreground">Simple tools, organized around your day.</p></div>
                     <ul className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -294,16 +301,23 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                     </ul>
                   </div>
                 )}
-                <div className="mt-7 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
-                  {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
-                </div>
-                <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {!isFirstIntroSlide && (
+                  <div className="mt-7 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                    {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
+                  </div>
+                )}
+                {isFirstIntroSlide ? (
+                  <div className="mt-5 flex flex-col gap-3">
+                    <button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} w-full`}>Next<ArrowRight className="size-4" /></button>
+                    <button type="button" onClick={goLogin} className="min-h-11 w-full rounded-full text-center text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button>
+                  </div>
+                ) : <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                   {slideIndex < slides.length - 1 ? (
                     <><button type="button" onClick={goLogin} className="min-h-11 rounded-full px-5 text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button><button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={filledButton}>Next<ArrowRight className="size-4" /></button></>
                   ) : (
                     <><button type="button" onClick={() => go("signup")} className={outlinedButton}>Sign up</button><button type="button" onClick={() => go("login")} className={filledButton}>Log in<ArrowRight className="size-4" /></button></>
                   )}
-                </div>
+                </div>}
               </div>
             )}
 
