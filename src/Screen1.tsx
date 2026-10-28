@@ -89,8 +89,8 @@ function formatPeriodTime(startMinute: number, endMinute: number) {
 function buildResetTimetable(periods: TimetablePeriod[], firstStartMinute: number) {
   const endOfDayMinute = 1439;
   return periods.map((period, index) => {
-    const startMinute = Math.min(firstStartMinute + index * 6, endOfDayMinute);
-    const endMinute = Math.min(firstStartMinute + index * 6 + 5, endOfDayMinute);
+    const startMinute = Math.min(firstStartMinute + index * 5, endOfDayMinute);
+    const endMinute = Math.min(firstStartMinute + index * 5 + 3, endOfDayMinute);
     return { ...period, startMinute, endMinute, time: formatPeriodTime(startMinute, endMinute) };
   });
 }

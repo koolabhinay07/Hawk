@@ -28,14 +28,14 @@ export const schoolClosedDays: ClosedDayConfig = {
 
 // Retroactive marking is supported by the existing attendance entry flow.
 export const allowRetroactiveMarking = true;
-export const attendanceGraceMinutes = 1;
+export const attendanceGraceMinutes = 2;
 
 export const timetable: TimetablePeriod[] = [
-  { period: "P1", time: "8:00–8:10 PM", startMinute: 1200, endMinute: 1210, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
-  { period: "P2", time: "8:11–8:16 PM", startMinute: 1211, endMinute: 1216, subject: "Physics", details: "Class 7-A · Covering for Mr. Verma", isProxy: true },
-  { period: "P3", time: "8:17–8:22 PM", startMinute: 1217, endMinute: 1222, subject: "English", details: "Class 9-A · 40 students", students: 40 },
-  { period: "P4", time: "8:23–8:28 PM", startMinute: 1223, endMinute: 1228, subject: "History", details: "Class 8-A · 41 students", students: 41 },
-  { period: "P5", time: "8:29–8:34 PM", startMinute: 1229, endMinute: 1234, subject: "Biology", details: "Class 10-C · 40 students", students: 40 },
+  { period: "P1", time: "8:00–8:03 PM", startMinute: 1200, endMinute: 1203, subject: "Mathematics", details: "Class 8-B · 42 students", students: 42, isOwnClass: true },
+  { period: "P2", time: "8:05–8:08 PM", startMinute: 1205, endMinute: 1208, subject: "Physics", details: "Class 7-A · Covering for Mr. Verma", isProxy: true },
+  { period: "P3", time: "8:10–8:13 PM", startMinute: 1210, endMinute: 1213, subject: "English", details: "Class 9-A · 40 students", students: 40 },
+  { period: "P4", time: "8:15–8:18 PM", startMinute: 1215, endMinute: 1218, subject: "History", details: "Class 8-A · 41 students", students: 41 },
+  { period: "P5", time: "8:20–8:23 PM", startMinute: 1220, endMinute: 1223, subject: "Biology", details: "Class 10-C · 40 students", students: 40 },
 ];
 
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
