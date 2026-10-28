@@ -89,8 +89,8 @@ function formatPeriodTime(startMinute: number, endMinute: number) {
 function buildResetTimetable(periods: TimetablePeriod[], firstStartMinute: number) {
   const endOfDayMinute = 1439;
   return periods.map((period, index) => {
-    const startMinute = Math.min(firstStartMinute + index * 13, endOfDayMinute);
-    const endMinute = Math.min(firstStartMinute + index * 13 + 10, endOfDayMinute);
+    const startMinute = Math.min(firstStartMinute + index * 6, endOfDayMinute);
+    const endMinute = Math.min(firstStartMinute + index * 6 + 5, endOfDayMinute);
     return { ...period, startMinute, endMinute, time: formatPeriodTime(startMinute, endMinute) };
   });
 }
@@ -100,14 +100,9 @@ function loadTimetable(dateKey: string): TimetablePeriod[] {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(`hawk-timetable-v2:${dateKey}`) ?? "null");
     if (!Array.isArray(parsed) || parsed.length !== defaultTimetable.length) return defaultTimetable;
     const storedPeriods = parsed as Partial<TimetablePeriod>[];
-    const periods = defaultTimetable.map((period) => {
-      const stored = storedPeriods.find((item) => item.period === period.period);
-      if (!stored || !Number.isInteger(stored.startMinute) || !Number.isInteger(stored.endMinute) ||
-        (stored.startMinute as number) < 0 || (stored.endMinute as number) < (stored.startMinute as number) ||
-        (stored.endMinute as number) > 1440 || typeof stored.time !== "string") return null;
-      return { ...period, startMinute: stored.startMinute as number, endMinute: stored.endMinute as number, time: stored.time };
-    });
-    return periods.every((period): period is TimetablePeriod => period !== null) ? periods : defaultTimetable;
+    const firstPeriod = storedPeriods.find((period) => period.period === "P1");
+    if (!firstPeriod || !Number.isInteger(firstPeriod.startMinute) || (firstPeriod.startMinute as number) < 0 || (firstPeriod.startMinute as number) >= 1440) return defaultTimetable;
+    return buildResetTimetable(defaultTimetable, firstPeriod.startMinute as number);
   } catch {
     return defaultTimetable;
   }
