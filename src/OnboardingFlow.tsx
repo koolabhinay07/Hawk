@@ -277,11 +277,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                 <p className="mb-2 text-sm font-semibold text-icon-accent">{slide.eyebrow}</p>
                 <h1 className="max-w-xl text-3xl font-bold leading-tight tracking-tight md:text-4xl">{slide.title}</h1>
                 <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
-                <div className="mt-5 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
-                  {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
-                </div>
                 {slideIndex === 0 ? (
-                  <ul className="mt-7 grid gap-4">
+                  <ul className="mt-5 grid gap-4">
                     {slide.points.map((point) => (
                       <li key={point} className="flex items-start gap-3 text-base leading-6 text-foreground">
                         <span aria-hidden="true" className="mt-2.5 size-2 shrink-0 rounded-full bg-primary" />
@@ -297,6 +294,9 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                     </ul>
                   </div>
                 )}
+                <div className="mt-7 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
+                </div>
                 <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                   {slideIndex < slides.length - 1 ? (
                     <><button type="button" onClick={goLogin} className="min-h-11 rounded-full px-5 text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button><button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={filledButton}>Next<ArrowRight className="size-4" /></button></>
