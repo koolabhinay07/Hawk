@@ -708,9 +708,9 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
   function resetPeriods() {
     const resetAt = new Date();
     const resetDateKey = getAttendanceDateKey(resetAt);
-    const proposedStart = getScheduleMinute(resetAt) + 10;
+    const proposedStart = getScheduleMinute(resetAt) + 2;
     const startMinute = Math.min(proposedStart, 1439);
-    const wasCapped = proposedStart + 62 > 1439;
+    const wasCapped = proposedStart + 29 > 1439;
     const nextTimetable = buildResetTimetable(timetable, startMinute);
     const p1Start = formatScheduleTime(nextTimetable[0].startMinute);
     const notice = wasCapped
@@ -1235,7 +1235,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     <div className="flex items-center justify-between gap-4">
                       <div className="min-w-0">
                         <h2 className="text-base font-semibold">Reset periods</h2>
-                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Resets today’s timetable to start 10 minutes from now (IST).</p>
+                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Resets today’s timetable to start 2 minutes from now (IST).</p>
                         <p className="mt-1 text-xs font-medium text-muted-foreground">{developerMode ? "Developer mode enabled" : "Developer only"}</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
