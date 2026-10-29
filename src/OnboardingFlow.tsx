@@ -254,7 +254,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
   const slideIllustration = onboardingIllustrations[slideIndex];
   const inputClass = "min-h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20";
   const signupInputClass = inputClass.replace("text-sm", "text-base");
-  const filledButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+  const filledButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
   const outlinedButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
   const isIntro = screen === "intro";
   const isFirstIntroSlide = isIntro && slideIndex === 0;
@@ -264,18 +264,18 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
     <main className={isIntro ? "relative min-h-dvh bg-background text-foreground md:flex md:items-center md:justify-center md:bg-[#f7f8f3]" : "grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}>
       {isIntro && (
         <div className="absolute inset-x-0 top-0 z-10 hidden px-6 pt-6 md:block">
-          <div className={`mx-auto flex w-full items-center justify-between ${isFirstIntroSlide ? "max-w-[1280px]" : "max-w-none"}`}>
+          <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between">
             <Brand />
             <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>
           </div>
         </div>
       )}
-      <div className={isIntro ? `contents md:mx-auto md:grid md:min-h-dvh md:w-full md:items-center ${isFirstIntroSlide ? "md:max-w-[1280px] md:grid-cols-[1.27fr_1fr] md:gap-16" : "md:max-w-[1100px] md:grid-cols-2"}` : "contents"}>
-        <div className={isIntro ? `hidden md:flex md:items-center md:justify-center ${isFirstIntroSlide ? "" : "md:px-6"}` : "contents"}>
+      <div className={isIntro ? "contents md:mx-auto md:grid md:min-h-dvh md:w-full md:max-w-[1280px] md:grid-cols-[1.27fr_1fr] md:items-center md:gap-16" : "contents"}>
+        <div className={isIntro ? "hidden md:flex md:items-center md:justify-center" : "contents"}>
           {isIntro ? <img src={slideIllustration} alt="" className="h-auto max-h-[520px] w-full max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
         <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-fit md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
-        <div className={`mx-auto flex w-full max-w-[560px] grow flex-col ${isFirstIntroSlide ? "px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : "px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
+        <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
           <div className={`flex items-center justify-between ${isIntro ? "md:hidden" : ""}`}>
             <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
             {!isFirstIntroSlide && <div className="hidden lg:block" />}
@@ -289,59 +289,33 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             ) : <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>}
           </div>
 
-          <div className={isFirstIntroSlide ? "flex-1 pt-8 md:flex-none md:pt-0" : "my-auto py-10 md:my-0 md:py-0"}>
+          <div className={isIntro ? "flex-1 pt-8 md:flex-none md:pt-0" : "my-auto py-10 md:my-0 md:py-0"}>
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out]">
-                {isFirstIntroSlide && (
-                  <div className="flex h-[min(55dvh,480px)] items-center justify-center md:hidden">
-                    <img src={onboardingSlideOne} alt="" className="h-full w-full object-contain" />
-                  </div>
-                )}
-                {isFirstIntroSlide && (
-                  <div className="-mt-20 flex items-center justify-center gap-2.5 md:hidden" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
-                    {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
-                  </div>
-                )}
-                <div className={isFirstIntroSlide ? "mt-6 text-center md:text-left" : ""}>
-                  {!isFirstIntroSlide && <p className="mb-2 text-sm font-semibold text-icon-accent">{slide.eyebrow}</p>}
-                  <h1 className={`max-w-xl text-3xl font-bold leading-tight tracking-tight md:text-4xl ${isFirstIntroSlide ? "mx-auto md:mx-0" : ""}`}>{slide.title}</h1>
-                  <p className={`mt-4 max-w-lg text-base leading-7 text-muted-foreground ${isFirstIntroSlide ? "mx-auto md:mx-0" : ""}`}>{slide.body}</p>
+                <div className="flex h-[min(55dvh,480px)] items-center justify-center md:hidden">
+                  <img src={slideIllustration} alt="" className="h-full w-full object-contain" />
                 </div>
-                {isFirstIntroSlide && (
-                  <div className="mt-7 hidden items-center justify-center gap-2.5 md:flex" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
-                    {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
-                  </div>
-                )}
-                {!isFirstIntroSlide && (
-                  <div className="mt-7 hidden items-center justify-center gap-2.5 md:flex" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
-                    {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
-                  </div>
-                )}
-                {!isFirstIntroSlide && (
-                  <div className="mt-7 rounded-3xl border border-border bg-card p-5 sm:p-6">
-                    <div><p className="text-base font-semibold">A thoughtful workspace for teachers</p><p className="mt-1 text-sm text-muted-foreground">Simple tools, organized around your day.</p></div>
-                    <ul className="mt-5 grid gap-3 sm:grid-cols-3">
-                      {slide.points.map((point) => <li key={point} className="text-sm leading-5 text-muted-foreground">{point}</li>)}
-                    </ul>
-                  </div>
-                )}
-                {!isFirstIntroSlide && (
-                  <div className="mt-7 flex items-center justify-center gap-2.5 md:hidden" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
-                    {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
-                  </div>
-                )}
-                {isFirstIntroSlide ? (
+                <div className="-mt-20 flex items-center justify-center gap-2.5 md:hidden" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
+                </div>
+                <div className="mt-6 text-center md:text-left">
+                  <h1 className="mx-auto max-w-xl text-3xl font-bold leading-tight tracking-tight md:mx-0 md:text-4xl">{slide.title}</h1>
+                  <p className="mx-auto mt-4 max-w-lg text-base leading-7 text-muted-foreground md:mx-0">{slide.body}</p>
+                </div>
+                <div className="mt-7 hidden items-center justify-center gap-2.5 md:flex" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
+                </div>
+                {isFirstIntroSlide || slideIndex === 1 ? (
                   <div className="mt-5 flex flex-col gap-3">
-                    <button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} w-full md:rounded-2xl`}>Next<ArrowRight className="size-4" /></button>
-                    <button type="button" onClick={goLogin} className="min-h-11 w-full rounded-full text-center text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button>
+                    <button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} w-full`}>Next<ArrowRight className="size-4" /></button>
+                    <button type="button" onClick={goLogin} className="min-h-11 w-full rounded-2xl text-center text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button>
                   </div>
-                ) : <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between md:flex-col md:items-stretch md:justify-start">
-                  {slideIndex < slides.length - 1 ? (
-                    <><button type="button" onClick={goLogin} className="min-h-11 rounded-full px-5 text-sm font-normal text-muted-foreground hover:bg-muted md:w-full md:text-center">Skip</button><button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} md:w-full md:rounded-2xl`}>Next<ArrowRight className="size-4" /></button></>
-                  ) : (
-                    <><button type="button" onClick={() => go("signup")} className={`${outlinedButton} md:w-full`}>Sign up</button><button type="button" onClick={() => go("login")} className={`${filledButton} md:w-full`}>Log in<ArrowRight className="size-4" /></button></>
-                  )}
-                </div>}
+                ) : (
+                  <div className="mt-5 flex flex-col gap-3">
+                    <button type="button" onClick={() => go("login")} className={`${filledButton} w-full`}>Log in<ArrowRight className="size-4" /></button>
+                    <button type="button" onClick={() => go("signup")} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2">Sign up</button>
+                  </div>
+                )}
               </div>
             )}
 
