@@ -263,17 +263,19 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
   return (
     <main className={isIntro ? "relative min-h-dvh bg-background text-foreground md:flex md:items-center md:justify-center md:bg-[#f7f8f3]" : "grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}>
       {isIntro && (
-        <div className="absolute inset-x-0 top-0 z-10 hidden items-center justify-between px-6 pt-6 md:flex">
-          <Brand />
-          <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>
+        <div className="absolute inset-x-0 top-0 z-10 hidden px-6 pt-6 md:block">
+          <div className={`mx-auto flex w-full items-center justify-between ${isFirstIntroSlide ? "max-w-[1280px]" : "max-w-none"}`}>
+            <Brand />
+            <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>
+          </div>
         </div>
       )}
-      <div className={isIntro ? "contents md:mx-auto md:grid md:min-h-dvh md:w-full md:max-w-[1100px] md:grid-cols-2 md:items-center" : "contents"}>
-        <div className={isIntro ? "hidden md:flex md:items-center md:justify-center md:px-6" : "contents"}>
+      <div className={isIntro ? `contents md:mx-auto md:grid md:min-h-dvh md:w-full md:items-center ${isFirstIntroSlide ? "md:max-w-[1280px] md:grid-cols-[1.27fr_1fr] md:gap-16" : "md:max-w-[1100px] md:grid-cols-2"}` : "contents"}>
+        <div className={isIntro ? `hidden md:flex md:items-center md:justify-center ${isFirstIntroSlide ? "" : "md:px-6"}` : "contents"}>
           {isIntro ? <img src={slideIllustration} alt="" className="h-auto max-h-[520px] w-full max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
         <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-fit md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
-        <div className={`mx-auto flex w-full max-w-[560px] grow flex-col ${isFirstIntroSlide ? "px-6 py-6 sm:px-6 md:grow-0 md:px-6 md:py-6" : "px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
+        <div className={`mx-auto flex w-full max-w-[560px] grow flex-col ${isFirstIntroSlide ? "px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : "px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
           <div className={`flex items-center justify-between ${isIntro ? "md:hidden" : ""}`}>
             <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
             {!isFirstIntroSlide && <div className="hidden lg:block" />}
