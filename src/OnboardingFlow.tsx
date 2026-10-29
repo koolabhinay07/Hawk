@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
+import onboardingSlideThree from "./assets/onboarding-slide-3.svg";
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,6 +11,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
+
+const onboardingIllustrations = [onboardingSlideOne, onboardingSlideTwo, onboardingSlideThree];
 
 type FlowScreen = "intro" | "login" | "signup" | "email-verify" | "email-verified" | "invite" | "forgot" | "forgot-verify" | "reset";
 
@@ -105,6 +109,7 @@ function Brand() {
 
 function ShowcasePanel({ screen, slideIndex }: { screen: FlowScreen; slideIndex: number }) {
   const slide = slides[slideIndex];
+  const slideIllustration = onboardingIllustrations[slideIndex];
   return (
     <aside className="relative hidden min-h-dvh overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-14">
       <Brand />
@@ -256,12 +261,13 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
   const showLoginHeader = screen === "login" || screen === "signup";
 
   return (
-    <main className={`grid min-h-dvh bg-background text-foreground ${isIntro ? "md:flex md:items-center md:justify-center md:bg-[#e2e1d9] md:p-6" : "lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}`}>
-      <div className={isIntro ? "hidden" : "contents"}>
-        <ShowcasePanel screen={screen} slideIndex={slideIndex} />
-      </div>
-      <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-[min(900px,calc(100dvh-48px))] md:min-h-0 md:w-[390px] md:shrink-0 md:overflow-y-auto md:rounded-3xl md:border md:border-black/[0.06] md:bg-background md:shadow-[0_8px_40px_rgba(0,0,0,0.10)]" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
-        <div className={`mx-auto flex w-full max-w-[560px] grow flex-col ${isFirstIntroSlide ? "px-6 py-6 sm:px-6 lg:px-6" : "px-5 py-6 sm:px-10 sm:py-9 lg:px-12 lg:py-10"}`}>
+    <main className={isIntro ? "min-h-dvh bg-background text-foreground md:flex md:items-center md:justify-center md:bg-[#e2e1d9]" : "grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}>
+      <div className={isIntro ? "contents md:mx-auto md:grid md:min-h-dvh md:w-full md:max-w-[960px] md:grid-cols-2" : "contents"}>
+        <div className={isIntro ? "hidden md:flex md:items-center md:justify-center md:px-6" : "contents"}>
+          {isIntro ? <img src={slideIllustration} alt="" className="h-auto max-h-[420px] w-full max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
+        </div>
+        <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:max-h-dvh md:w-full md:overflow-y-auto" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
+        <div className={`mx-auto flex w-full max-w-[560px] grow flex-col ${isFirstIntroSlide ? "px-6 py-6 sm:px-6 md:px-6 md:py-12" : "px-5 py-6 sm:px-10 sm:py-9 md:px-6 md:py-12 lg:px-6 lg:py-12"}`}>
           <div className="flex items-center justify-between">
             <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
             {!isFirstIntroSlide && <div className="hidden lg:block" />}
@@ -279,20 +285,30 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out]">
                 {isFirstIntroSlide && (
-                  <div className="flex h-[min(55dvh,480px)] items-center justify-center">
+                  <div className="flex h-[min(55dvh,480px)] items-center justify-center md:hidden">
                     <img src={onboardingSlideOne} alt="" className="h-full w-full object-contain" />
                   </div>
                 )}
                 {isFirstIntroSlide && (
-                  <div className="-mt-20 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  <div className="-mt-20 flex items-center justify-center gap-2.5 md:hidden" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
                   </div>
                 )}
-                <div className={isFirstIntroSlide ? "mt-6 text-center" : ""}>
+                <div className={isFirstIntroSlide ? "mt-6 text-center md:text-left" : ""}>
                   {!isFirstIntroSlide && <p className="mb-2 text-sm font-semibold text-icon-accent">{slide.eyebrow}</p>}
-                  <h1 className={`max-w-xl text-3xl font-bold leading-tight tracking-tight md:text-4xl ${isFirstIntroSlide ? "mx-auto" : ""}`}>{slide.title}</h1>
-                  <p className={`mt-4 max-w-lg text-base leading-7 text-muted-foreground ${isFirstIntroSlide ? "mx-auto" : ""}`}>{slide.body}</p>
+                  <h1 className={`max-w-xl text-3xl font-bold leading-tight tracking-tight md:text-4xl ${isFirstIntroSlide ? "mx-auto md:mx-0" : ""}`}>{slide.title}</h1>
+                  <p className={`mt-4 max-w-lg text-base leading-7 text-muted-foreground ${isFirstIntroSlide ? "mx-auto md:mx-0" : ""}`}>{slide.body}</p>
                 </div>
+                {isFirstIntroSlide && (
+                  <div className="mt-7 hidden items-center justify-start gap-2.5 md:flex" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                    {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
+                  </div>
+                )}
+                {!isFirstIntroSlide && (
+                  <div className="mt-7 hidden items-center justify-start gap-2.5 md:flex" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                    {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
+                  </div>
+                )}
                 {!isFirstIntroSlide && (
                   <div className="mt-7 rounded-3xl border border-border bg-card p-5 sm:p-6">
                     <div><p className="text-base font-semibold">A thoughtful workspace for teachers</p><p className="mt-1 text-sm text-muted-foreground">Simple tools, organized around your day.</p></div>
@@ -302,7 +318,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                   </div>
                 )}
                 {!isFirstIntroSlide && (
-                  <div className="mt-7 flex items-center justify-center gap-2.5" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  <div className="mt-7 flex items-center justify-center gap-2.5 md:hidden" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-3 rounded-full transition-all ${index === slideIndex ? "w-8 bg-primary" : "w-3 bg-muted-foreground/50"}`} />)}
                   </div>
                 )}
@@ -311,11 +327,11 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                     <button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} w-full`}>Next<ArrowRight className="size-4" /></button>
                     <button type="button" onClick={goLogin} className="min-h-11 w-full rounded-full text-center text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button>
                   </div>
-                ) : <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                ) : <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between md:flex-col md:items-stretch md:justify-start">
                   {slideIndex < slides.length - 1 ? (
-                    <><button type="button" onClick={goLogin} className="min-h-11 rounded-full px-5 text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button><button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={filledButton}>Next<ArrowRight className="size-4" /></button></>
+                    <><button type="button" onClick={goLogin} className="min-h-11 rounded-full px-5 text-sm font-normal text-muted-foreground hover:bg-muted md:w-full md:text-center">Skip</button><button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} md:w-full`}>Next<ArrowRight className="size-4" /></button></>
                   ) : (
-                    <><button type="button" onClick={() => go("signup")} className={outlinedButton}>Sign up</button><button type="button" onClick={() => go("login")} className={filledButton}>Log in<ArrowRight className="size-4" /></button></>
+                    <><button type="button" onClick={() => go("signup")} className={`${outlinedButton} md:w-full`}>Sign up</button><button type="button" onClick={() => go("login")} className={`${filledButton} md:w-full`}>Log in<ArrowRight className="size-4" /></button></>
                   )}
                 </div>}
               </div>
@@ -463,7 +479,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
           </div>
 
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
