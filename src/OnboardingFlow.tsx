@@ -287,7 +287,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
       )}
       <div className={isIntro ? "contents md:mx-auto md:grid md:h-[min(760px,calc(100dvh_-_48px))] md:min-h-[620px] md:w-full md:max-w-[1280px] md:grid-cols-[1.27fr_1fr] md:items-stretch md:gap-16" : "contents"}>
         <div className={isIntro ? "hidden md:flex md:h-full md:items-center md:justify-center" : "contents"}>
-          {isIntro ? <img src={slideIllustration} alt="" className="h-auto max-h-[520px] w-full max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
+          {isIntro ? <img src={slideIllustration} alt="" className="h-full max-h-[520px] w-full max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
         <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
         <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
@@ -351,8 +351,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             )}
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-                <div className="flex min-h-0 flex-1 items-center justify-center md:hidden">
-                  <img src={slideIllustration} alt="" className="max-h-full max-w-full object-contain" />
+                <div className="flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden">
+                  <img src={slideIllustration} alt="" className="h-full w-full object-contain" />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-auto md:pb-0 md:text-left">
                   <div className="flex h-[76px] flex-none items-center justify-center md:h-[88px] md:justify-start">
@@ -361,16 +361,16 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                   <div className="mt-2 flex h-[84px] flex-none items-center justify-center md:mt-3 md:justify-start">
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
-                  <div className="mt-4 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-start" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  <div className="mt-4 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
                   </div>
                   {isFirstIntroSlide || slideIndex === 1 ? (
-                    <div className="mt-auto flex flex-col gap-3 md:mt-7">
+                    <div className="mt-5 flex flex-col gap-3">
                       <button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} w-full`}>Next<ArrowRight className="size-4" /></button>
                       <button type="button" onClick={goLogin} className="min-h-11 w-full rounded-2xl text-center text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button>
                     </div>
                   ) : (
-                    <div className="mt-auto flex flex-col gap-3 md:mt-7">
+                    <div className="mt-5 flex flex-col gap-3">
                       <button type="button" onClick={() => go("login")} className={`${filledButton} w-full`}>Log in<ArrowRight className="size-4" /></button>
                       <button type="button" onClick={() => go("signup")} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2">Sign up</button>
                     </div>
