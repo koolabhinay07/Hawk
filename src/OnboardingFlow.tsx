@@ -299,7 +299,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             {showLoginHeader && (
               <div className="md:hidden">
                 <div className="mb-8 flex justify-center"><Brand /></div>
-                <h1 className="text-center text-3xl font-bold leading-tight tracking-tight">Welcome to Hawk</h1>
+                <h1 className="text-center text-3xl font-semibold leading-tight tracking-tight">{screen === "login" ? "Welcome Back" : "Welcome to Hawk"}</h1>
+                <p className="mt-2 text-center text-sm leading-5 text-muted-foreground">{screen === "login" ? "Sign in to your workspace and pick up where you left off." : "Create your account and get started with Hawk."}</p>
                 <div className="mt-7 grid grid-cols-2 border-b border-border" role="tablist" aria-label="Account access">
                   <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-12 border-b-2 px-2 text-base font-semibold transition-colors ${screen === "login" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Login</button>
                   <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-12 border-b-2 px-2 text-base font-semibold transition-colors ${screen === "signup" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Sign Up</button>
@@ -376,12 +377,12 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             {screen === "login" && (
               <div className="hidden md:block">
                 <p className="mb-2 text-sm font-semibold text-icon-accent">Welcome back</p>
-                <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Log in to Hawk</h1>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your account to continue to your teacher workspace.</p>
+                <h1 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">Welcome Back</h1>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Sign in to your workspace and pick up where you left off.</p>
                 {notice && <p role="status" className="mt-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   <button type="button" onClick={() => onComplete()} className={outlinedButton}><img src={appleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Apple</button>
-                  <button type="button" onClick={() => onComplete()} className={outlinedButton}><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
+                  <button type="button" onClick={() => onComplete()} className={`${outlinedButton} w-full`}><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
                 </div>
                 <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" />Or Continue with Email<span className="h-px grow bg-border" /></div>
                 <form className="grid gap-4" onSubmit={submitLogin}>
@@ -397,7 +398,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             {screen === "signup" && (
               <div className="hidden md:block">
                 <p className="mb-2 text-base font-semibold text-icon-accent">Create your teacher account</p>
-                <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Sign up for Hawk</h1>
+                <h1 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">Welcome to Hawk</h1>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Create your account and get started with Hawk.</p>
                 <form className="mt-6 grid gap-4" onSubmit={submitSignup}>
                   <label className="grid gap-2 text-base font-semibold">Your full name<input autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Your full name" className={signupInputClass} /></label>
                   <label className="grid gap-2 text-base font-semibold">Email<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={signupInputClass} /></label>
