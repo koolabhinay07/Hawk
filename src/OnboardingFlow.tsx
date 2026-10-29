@@ -307,7 +307,10 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                 {screen === "login" && (
                   <div className="mt-6">
                     {notice && <p role="status" className="mb-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
-                    <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
+                    <div className="grid gap-3">
+                      <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={appleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Apple</button>
+                      <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
+                    </div>
                     <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
                     <form className="grid gap-4" onSubmit={submitLogin}>
                       <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
