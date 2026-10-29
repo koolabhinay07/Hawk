@@ -109,7 +109,6 @@ function Brand() {
 
 function ShowcasePanel({ screen, slideIndex }: { screen: FlowScreen; slideIndex: number }) {
   const slide = slides[slideIndex];
-  const slideIllustration = onboardingIllustrations[slideIndex];
   return (
     <aside className="relative hidden min-h-dvh overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-14">
       <Brand />
@@ -252,6 +251,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
   }
 
   const slide = slides[slideIndex];
+  const slideIllustration = onboardingIllustrations[slideIndex];
   const inputClass = "min-h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20";
   const signupInputClass = inputClass.replace("text-sm", "text-base");
   const filledButton = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
