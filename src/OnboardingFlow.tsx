@@ -295,36 +295,36 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             ) : <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>}
           </div>
 
-          <div className={isIntro ? "flex min-h-0 flex-1 flex-col pt-4 md:pt-0" : showLoginHeader ? "flex-1 py-6 md:my-auto md:flex-none md:py-10" : "my-auto py-10 md:my-0 md:py-0"}>
+          <div className={isIntro ? "flex min-h-0 flex-1 flex-col pt-4 md:pt-0" : showLoginHeader ? "flex flex-1 flex-col md:my-auto md:block md:flex-none md:py-10" : "my-auto py-10 md:my-0 md:py-0"}>
             {showLoginHeader && (
-              <div className="md:hidden">
+              <div className="flex flex-1 flex-col md:hidden">
                 <div className="mb-8 flex justify-center"><Brand /></div>
                 <h1 className="text-center text-3xl font-semibold leading-tight tracking-tight">{screen === "login" ? "Welcome Back" : "Welcome to Hawk"}</h1>
                 <p className="mt-2 text-center text-sm leading-5 text-muted-foreground">{screen === "login" ? "Sign in to your workspace and pick up where you left off." : "Create your account and get started with Hawk."}</p>
                 <div className="mt-7 grid grid-cols-2 border-b border-border" role="tablist" aria-label="Account access">
-                  <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-12 border-b-2 px-2 text-base font-semibold transition-colors ${screen === "login" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Login</button>
-                  <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-12 border-b-2 px-2 text-base font-semibold transition-colors ${screen === "signup" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Sign Up</button>
+                  <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-12 border-b-2 px-2 text-base font-normal transition-colors ${screen === "login" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Login</button>
+                  <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-12 border-b-2 px-2 text-base font-normal transition-colors ${screen === "signup" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Sign Up</button>
                 </div>
                 {screen === "login" && (
-                  <div className="mt-6">
+                  <div className="mt-6 flex flex-1 flex-col">
                     {notice && <p role="status" className="mb-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
                     <div className="grid gap-3">
                       <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={appleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Apple</button>
                       <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
                     </div>
                     <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
-                    <form className="grid gap-4" onSubmit={submitLogin}>
+                    <form className="flex flex-1 flex-col gap-4" onSubmit={submitLogin}>
                       <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
                       <label className="relative block"><span className="sr-only">Password</span><LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Password" type={showPassword ? "text" : "password"} autoComplete="current-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${signupInputClass} pl-12 pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></label>
                       <div className="-mt-2 flex justify-start"><button type="button" onClick={() => go("forgot")} className="min-h-9 text-sm text-muted-foreground hover:text-icon-accent hover:underline">Forgot Password?</button></div>
                       {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
-                      <button type="submit" className={`${filledButton} w-full`}>Login</button>
+                      <button type="submit" className={`${filledButton} mt-auto w-full`}>Login</button>
                     </form>
                   </div>
                 )}
                 {screen === "signup" && (
-                  <div className="mt-6">
-                    <form className="grid gap-3" onSubmit={submitSignup}>
+                  <div className="mt-6 flex flex-1 flex-col">
+                    <form className="flex flex-1 flex-col gap-3" onSubmit={submitSignup}>
                       <label className="relative block"><span className="sr-only">Your name</span><UserRound aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Your name" autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Your name" className={`${signupInputClass} pl-12`} /></label>
                       <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
                       <label className="relative block"><span className="sr-only">Password</span><LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Password" type={showPassword ? "text" : "password"} autoComplete="new-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${signupInputClass} pl-12 pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></label>
@@ -337,9 +337,9 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                         })}
                       </ul>
                       {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
-                      <button type="submit" className={`${filledButton} mt-2 w-full`}>Sign Up</button>
+                      <p className="mt-4 text-center text-sm leading-5 text-muted-foreground">By signing up, you agree to our <a href="#privacy-policy" className="font-semibold text-icon-accent underline-offset-4 hover:underline">Privacy Policy</a></p>
+                      <button type="submit" className={`${filledButton} mt-auto w-full`}>Sign Up</button>
                     </form>
-                    <p className="mt-4 text-center text-sm leading-5 text-muted-foreground">By signing up, you agree to our <a href="#privacy-policy" className="font-semibold text-icon-accent underline-offset-4 hover:underline">Privacy Policy</a></p>
                   </div>
                 )}
               </div>
