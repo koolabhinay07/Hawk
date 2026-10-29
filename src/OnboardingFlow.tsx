@@ -256,11 +256,11 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
   const showLoginHeader = screen === "login" || screen === "signup";
 
   return (
-    <main className={`grid min-h-dvh bg-background text-foreground ${isFirstIntroSlide ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}`}>
-      <div className={isFirstIntroSlide ? "hidden" : "contents"}>
+    <main className={`grid min-h-dvh bg-background text-foreground ${isIntro ? "md:flex md:items-center md:justify-center md:bg-[#e2e1d9] md:p-6" : "lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}`}>
+      <div className={isIntro ? "hidden" : "contents"}>
         <ShowcasePanel screen={screen} slideIndex={slideIndex} />
       </div>
-      <section className="flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto">
+      <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-[min(900px,calc(100dvh-48px))] md:min-h-0 md:w-[390px] md:shrink-0 md:overflow-y-auto md:rounded-3xl md:border md:border-black/[0.06] md:bg-background md:shadow-[0_8px_40px_rgba(0,0,0,0.10)]" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
         <div className={`mx-auto flex w-full max-w-[560px] grow flex-col ${isFirstIntroSlide ? "px-6 py-6 sm:px-6 lg:px-6" : "px-5 py-6 sm:px-10 sm:py-9 lg:px-12 lg:py-10"}`}>
           <div className="flex items-center justify-between">
             <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
