@@ -367,7 +367,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                   {isFirstIntroSlide || slideIndex === 1 ? (
                     <div className="mt-5 flex flex-col gap-3">
                       <button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} w-full`}>Next<ArrowRight className="size-4" /></button>
-                      <button type="button" onClick={goLogin} className="min-h-11 w-full rounded-2xl text-center text-sm font-normal text-muted-foreground hover:bg-muted">Skip</button>
+                      <button type="button" onClick={goLogin} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2">Skip</button>
                     </div>
                   ) : (
                     <div className="mt-5 flex flex-col gap-3">
