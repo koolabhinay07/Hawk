@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
 import onboardingSlideThree from "./assets/onboarding-slide-3.svg";
+import appleIcon from "./assets/apple-icon.svg";
+import googleIcon from "./assets/google-icon.svg";
 import {
   ArrowLeft,
   ArrowRight,
@@ -108,17 +110,6 @@ function OtpFields({ value, onChange, label }: { value: string; onChange: (value
 function Brand() {
   return (
     <span className="text-xl font-bold tracking-tight">Hawk</span>
-  );
-}
-
-function GoogleMark() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 48 48" className="size-5">
-      <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z" />
-      <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
-      <path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4V15H5.8a20 20 0 0 0 0 18Z" />
-      <path fill="#EA4335" d="M24 12c3 0 5.6 1 7.7 3l5.8-5.8A19.3 19.3 0 0 0 24 4 20 20 0 0 0 5.8 15l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
-    </svg>
   );
 }
 
@@ -316,7 +307,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                 {screen === "login" && (
                   <div className="mt-6">
                     {notice && <p role="status" className="mb-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
-                    <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><GoogleMark />Login with Google</button>
+                    <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
                     <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
                     <form className="grid gap-4" onSubmit={submitLogin}>
                       <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
@@ -386,8 +377,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your account to continue to your teacher workspace.</p>
                 {notice && <p role="status" className="mt-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  <button type="button" onClick={() => onComplete()} className={outlinedButton}><span aria-hidden="true" className="text-base font-bold">●</span>Login with Apple</button>
-                  <button type="button" onClick={() => onComplete()} className={outlinedButton}><span aria-hidden="true" className="font-bold text-base">G</span>Login with Google</button>
+                  <button type="button" onClick={() => onComplete()} className={outlinedButton}><img src={appleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Apple</button>
+                  <button type="button" onClick={() => onComplete()} className={outlinedButton}><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
                 </div>
                 <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" />Or Continue with Email<span className="h-px grow bg-border" /></div>
                 <form className="grid gap-4" onSubmit={submitLogin}>
