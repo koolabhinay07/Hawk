@@ -5,10 +5,14 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Check,
+  Circle,
   Eye,
   EyeOff,
+  LockKeyhole,
   Mail,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
 
@@ -104,6 +108,17 @@ function OtpFields({ value, onChange, label }: { value: string; onChange: (value
 function Brand() {
   return (
     <span className="text-xl font-bold tracking-tight">Hawk</span>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 48 48" className="size-5">
+      <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z" />
+      <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
+      <path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4V15H5.8a20 20 0 0 0 0 18Z" />
+      <path fill="#EA4335" d="M24 12c3 0 5.6 1 7.7 3l5.8-5.8A19.3 19.3 0 0 0 24 4 20 20 0 0 0 5.8 15l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
+    </svg>
   );
 }
 
@@ -275,8 +290,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
           {isIntro ? <img src={slideIllustration} alt="" className="h-auto max-h-[520px] w-full max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
         <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-fit md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
-        <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
-          <div className={`flex items-center justify-between ${isIntro ? "md:hidden" : ""}`}>
+        <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
+          <div className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden md:flex" : ""}`}>
             <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
             {!isFirstIntroSlide && <div className="hidden lg:block" />}
             {showLoginHeader ? (
@@ -289,7 +304,51 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             ) : <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>}
           </div>
 
-          <div className={isIntro ? "flex-1 pt-8 md:flex-none md:pt-0" : "my-auto py-10 md:my-0 md:py-0"}>
+          <div className={isIntro ? "flex-1 pt-8 md:flex-none md:pt-0" : showLoginHeader ? "flex-1 py-6 md:my-auto md:flex-none md:py-10" : "my-auto py-10 md:my-0 md:py-0"}>
+            {showLoginHeader && (
+              <div className="md:hidden">
+                <div className="mb-8 flex justify-center"><Brand /></div>
+                <h1 className="text-center text-3xl font-bold leading-tight tracking-tight">Welcome to Hawk</h1>
+                <div className="mt-7 grid grid-cols-2 border-b border-border" role="tablist" aria-label="Account access">
+                  <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-12 border-b-2 px-2 text-base font-semibold transition-colors ${screen === "login" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Login</button>
+                  <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-12 border-b-2 px-2 text-base font-semibold transition-colors ${screen === "signup" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Sign Up</button>
+                </div>
+                {screen === "login" && (
+                  <div className="mt-6">
+                    {notice && <p role="status" className="mb-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-icon-accent">{notice}</p>}
+                    <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><GoogleMark />Login with Google</button>
+                    <div className="my-6 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
+                    <form className="grid gap-4" onSubmit={submitLogin}>
+                      <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
+                      <label className="relative block"><span className="sr-only">Password</span><LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Password" type={showPassword ? "text" : "password"} autoComplete="current-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${signupInputClass} pl-12 pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></label>
+                      <div className="-mt-2 flex justify-start"><button type="button" onClick={() => go("forgot")} className="min-h-9 text-sm text-muted-foreground hover:text-icon-accent hover:underline">Forgot Password?</button></div>
+                      {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
+                      <button type="submit" className={`${filledButton} w-full`}>Login</button>
+                    </form>
+                  </div>
+                )}
+                {screen === "signup" && (
+                  <div className="mt-6">
+                    <form className="grid gap-3" onSubmit={submitSignup}>
+                      <label className="relative block"><span className="sr-only">Your name</span><UserRound aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Your name" autoComplete="name" required value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Your name" className={`${signupInputClass} pl-12`} /></label>
+                      <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
+                      <label className="relative block"><span className="sr-only">Password</span><LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Password" type={showPassword ? "text" : "password"} autoComplete="new-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${signupInputClass} pl-12 pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></label>
+                      <label className="relative block"><span className="sr-only">Confirm your password</span><LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Confirm your password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Confirm your password" className={`${signupInputClass} pl-12 pr-12`} /><button type="button" aria-label={showConfirmPassword ? "Hide password" : "Show password"} onClick={() => setShowConfirmPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></label>
+                      <ul aria-label="Password requirements" aria-live="polite" className="mt-1 grid gap-1">
+                        {passwordRules.map((rule, index) => {
+                          const met = rule.test(password);
+                          const labels = ["At least 8 characters", "At least 1 number", "Both upper and lower case letters"];
+                          return <li key={rule.label} aria-label={`${labels[index]}: ${met ? "met" : "not met"}`} className={`flex items-center gap-2 text-sm ${met ? "text-icon-accent" : "text-muted-foreground"}`}>{met ? <Check aria-hidden="true" className="size-4 shrink-0" /> : <Circle aria-hidden="true" className="size-2 shrink-0 fill-current" />}{labels[index]}</li>;
+                        })}
+                      </ul>
+                      {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
+                      <button type="submit" className={`${filledButton} mt-2 w-full`}>Sign Up</button>
+                    </form>
+                    <p className="mt-4 text-center text-sm leading-5 text-muted-foreground">By signing up, you agree to our <a href="#privacy-policy" className="font-semibold text-icon-accent underline-offset-4 hover:underline">Privacy Policy</a></p>
+                  </div>
+                )}
+              </div>
+            )}
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out]">
                 <div className="flex h-[min(55dvh,480px)] items-center justify-center md:hidden">
@@ -320,7 +379,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             )}
 
             {screen === "login" && (
-              <div>
+              <div className="hidden md:block">
                 <p className="mb-2 text-sm font-semibold text-icon-accent">Welcome back</p>
                 <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Log in to Hawk</h1>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your account to continue to your teacher workspace.</p>
@@ -341,7 +400,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             )}
 
             {screen === "signup" && (
-              <div>
+              <div className="hidden md:block">
                 <p className="mb-2 text-base font-semibold text-icon-accent">Create your teacher account</p>
                 <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">Sign up for Hawk</h1>
                 <form className="mt-6 grid gap-4" onSubmit={submitSignup}>
