@@ -32,13 +32,13 @@ const slides = [
   {
     eyebrow: "Made to feel natural",
     title: "User Friendly at its Core",
-    body: "Find what you need quickly, with simple tools that make every school day easier to manage.",
+    body: "Simple tools, built around how a teacher’s day actually works.",
     points: ["Clear, familiar actions", "Easy to learn", "Designed for busy days"],
   },
   {
     eyebrow: "Everything in its place",
     title: "Effortless Classroom Management",
-    body: "Keep track of lessons, attendance, and school updates without losing sight of what matters.",
+    body: "Attendance, proxies and class updates, all kept on track for you.",
     points: ["Your day at a glance", "Attendance when you need it", "Updates for your classes"],
   },
 ];
@@ -175,6 +175,14 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
     }
   }, []);
 
+  useEffect(() => {
+    onboardingIllustrations.forEach((src) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+    });
+  }, []);
+
   function go(next: FlowScreen) {
     setError("");
     setNotice("");
@@ -278,7 +286,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
       )}
       <div className={isIntro ? "contents md:mx-auto md:grid md:h-[min(760px,calc(100dvh_-_48px))] md:min-h-0 md:w-full md:max-w-[1280px] md:grid-cols-[1.27fr_1fr] md:items-stretch md:gap-16" : "contents"}>
         <div className={isIntro ? "hidden md:flex md:h-full md:items-center md:justify-center" : "contents"}>
-          {isIntro ? <img src={slideIllustration} alt="" className={`h-full max-h-[520px] w-full max-w-full object-contain ${slideIndex === 1 ? "translate-y-2" : ""}`} /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
+          {isIntro ? <img src={slideIllustration} alt="" className="h-full max-h-[520px] w-auto max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
         <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-0 min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
         <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-dvh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
@@ -347,7 +355,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                 <div className="mb-6 flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden">
-                  <img src={slideIllustration} alt="" className={`h-full w-full object-contain object-bottom md:object-center ${slideIndex === 1 ? "translate-y-2" : ""}`} />
+                  <img src={slideIllustration} alt="" className="h-full max-h-[520px] w-auto max-w-full object-contain object-center" />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left">
                   <div className="flex h-[148px] flex-none flex-col items-center justify-center gap-1 md:h-[172px] md:items-start">
