@@ -347,25 +347,25 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                 <div className="flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden">
-                  <img src={slideIllustration} alt="" className="h-full w-full object-contain" />
+                  <img src={slideIllustration} alt="" className="h-full w-full object-contain object-bottom md:object-center" />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-auto md:pb-0 md:text-left">
-                  <div className="flex h-[76px] flex-none items-center justify-center md:h-[88px] md:justify-start">
+                  <div className="flex h-auto flex-none items-center justify-center md:h-[88px] md:justify-start">
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                   </div>
-                  <div className="mt-2 flex h-[84px] flex-none items-center justify-center md:mt-3 md:justify-start">
+                  <div className="mt-2 flex h-auto flex-none items-center justify-center md:mt-3 md:h-[84px] md:justify-start">
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
-                  <div className="mt-4 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  <div className="mt-2 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
                   </div>
                   {isFirstIntroSlide || slideIndex === 1 ? (
-                    <div className="mt-5 flex flex-col gap-3">
+                    <div className="mt-3 flex flex-col gap-3 md:mt-5">
                       <button type="button" onClick={() => setSlideIndex((index) => Math.min(index + 1, slides.length - 1))} className={`${filledButton} w-full`}>Next<ArrowRight className="size-4" /></button>
                       <button type="button" onClick={goLogin} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2">Skip</button>
                     </div>
                   ) : (
-                    <div className="mt-5 flex flex-col gap-3">
+                    <div className="mt-3 flex flex-col gap-3 md:mt-5">
                       <button type="button" onClick={() => go("login")} className={`${filledButton} w-full`}>Log in<ArrowRight className="size-4" /></button>
                       <button type="button" onClick={() => go("signup")} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2">Sign up</button>
                     </div>
