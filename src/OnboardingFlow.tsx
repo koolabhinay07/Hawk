@@ -278,7 +278,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
       )}
       <div className={isIntro ? "contents md:mx-auto md:grid md:h-[min(760px,calc(100dvh_-_48px))] md:min-h-0 md:w-full md:max-w-[1280px] md:grid-cols-[1.27fr_1fr] md:items-stretch md:gap-16" : "contents"}>
         <div className={isIntro ? "hidden md:flex md:h-full md:items-center md:justify-center" : "contents"}>
-          {isIntro ? <img src={slideIllustration} alt="" className={`h-full max-h-[520px] w-full max-w-full object-contain ${slideIndex === 1 ? "scale-[1.16]" : ""}`} /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
+          {isIntro ? <img src={slideIllustration} alt="" className={`h-full max-h-[520px] w-full max-w-full object-contain ${slideIndex === 1 ? "translate-y-2" : ""}`} /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
         <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-0 min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
         <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-dvh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
@@ -347,16 +347,14 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                 <div className="mb-6 flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden">
-                  <img src={slideIllustration} alt="" className={`h-full w-full object-contain object-bottom md:object-center ${slideIndex === 1 ? "scale-[1.16]" : ""}`} />
+                  <img src={slideIllustration} alt="" className={`h-full w-full object-contain object-bottom md:object-center ${slideIndex === 1 ? "translate-y-2" : ""}`} />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left">
-                  <div className="flex h-[76px] flex-none items-center justify-center md:h-[88px] md:items-center md:justify-start">
+                  <div className="flex h-[160px] flex-none flex-col items-center justify-center gap-1 md:h-[184px] md:items-start">
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
-                  </div>
-                  <div className="mt-0 flex h-[84px] flex-none items-start justify-center md:mt-3 md:h-[84px] md:items-center md:justify-start">
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
-                  <div className="mt-2 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  <div className="mt-1 flex h-[6px] flex-none items-center justify-center gap-2.5 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
                   </div>
                   {isFirstIntroSlide || slideIndex === 1 ? (
