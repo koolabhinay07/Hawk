@@ -280,15 +280,15 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
         <div className={isIntro ? "hidden md:flex md:h-full md:items-center md:justify-center" : "contents"}>
           {isIntro ? <img src={slideIllustration} alt="" className="h-full max-h-[520px] w-full max-w-full object-contain" /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
-        <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-dvh min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
+        <section className={isIntro ? "flex h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-0 min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
         <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
           <div className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden md:flex" : ""}`}>
             <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
             {!isFirstIntroSlide && <div className="hidden lg:block" />}
             {showLoginHeader ? (
               <div className="flex items-center rounded-full bg-muted p-1" role="tablist" aria-label="Account access">
-                <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Log in</button>
-                <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Sign up</button>
+                <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Log in</button>
+                <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>Sign up</button>
               </div>
             ) : !isIntro && screen !== "invite" && screen !== "email-verify" && screen !== "email-verified" ? (
               <button type="button" onClick={goLogin} className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-sm font-semibold text-icon-accent hover:bg-primary-soft"><ArrowLeft className="size-4" />Log in</button>
@@ -302,8 +302,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                 <h1 className="text-center text-3xl font-semibold leading-tight tracking-tight">{screen === "login" ? "Welcome Back" : "Welcome to Hawk"}</h1>
                 <p className="mt-3 text-center text-sm leading-5 text-muted-foreground">{screen === "login" ? "Sign in to your workspace and pick up where you left off." : "Create your account and get started with Hawk."}</p>
                 <div className="mt-7 grid grid-cols-2 border-b border-border" role="tablist" aria-label="Account access">
-                  <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-12 border-b-2 px-2 text-base font-normal transition-colors ${screen === "login" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Login</button>
-                  <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-12 border-b-2 px-2 text-base font-normal transition-colors ${screen === "signup" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Sign Up</button>
+                  <button type="button" role="tab" aria-selected={screen === "login"} onClick={() => go("login")} className={`min-h-12 border-b-2 px-2 text-base font-medium transition-colors ${screen === "login" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Login</button>
+                  <button type="button" role="tab" aria-selected={screen === "signup"} onClick={() => go("signup")} className={`min-h-12 border-b-2 px-2 text-base font-medium transition-colors ${screen === "signup" ? "border-primary text-icon-accent" : "border-transparent text-muted-foreground"}`}>Sign Up</button>
                 </div>
                 {screen === "login" && (
                   <div className="mt-7">
@@ -346,17 +346,17 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             )}
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-                <div className={`flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden ${slideIndex === 0 ? "mb-6" : ""}`}>
+                <div className="flex min-h-0 basis-0 flex-1 items-center justify-center mb-6 md:hidden">
                   <img src={slideIllustration} alt="" className="h-full w-full object-contain object-bottom md:object-center" />
                 </div>
-                <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-auto md:pb-0 md:text-left">
-                  <div className={`flex h-[76px] flex-none justify-center md:h-[88px] md:justify-start ${slideIndex === 0 ? "items-start md:items-center" : "items-center"}`}>
+                <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left">
+                  <div className="flex h-[76px] flex-none items-start justify-center md:h-[88px] md:items-center md:justify-start">
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                   </div>
-                  <div className={`flex h-[84px] flex-none justify-center md:mt-3 md:h-[84px] md:justify-start md:items-center ${slideIndex === 0 ? "-mt-7 items-start" : "mt-2 items-center"}`}>
+                  <div className="-mt-7 flex h-[84px] flex-none items-start justify-center md:mt-3 md:h-[84px] md:items-center md:justify-start">
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
-                  <div className={`flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center ${slideIndex === 0 ? "-mt-1.5" : "mt-2"}`} role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  <div className="-mt-1.5 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
                   </div>
                   {isFirstIntroSlide || slideIndex === 1 ? (
