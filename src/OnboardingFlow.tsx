@@ -267,7 +267,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
   const showLoginHeader = screen === "login" || screen === "signup";
 
   return (
-    <main className={isIntro ? "relative h-dvh overflow-hidden overscroll-none bg-background text-foreground md:flex md:items-center md:justify-center md:bg-[#f7f8f3]" : "grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}>
+    <main className={isIntro ? "relative min-h-dvh bg-background text-foreground md:flex md:h-dvh md:min-h-dvh md:items-center md:justify-center md:bg-[#f7f8f3]" : "grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"}>
       {isIntro && (
         <div className="absolute inset-x-0 top-0 z-10 hidden px-6 pt-6 md:block">
           <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between">
@@ -280,8 +280,8 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
         <div className={isIntro ? "hidden md:flex md:h-full md:items-center md:justify-center" : "contents"}>
           {isIntro ? <img src={slideIllustration} alt="" className={`h-full max-h-[520px] w-full max-w-full object-contain ${slideIndex === 1 ? "scale-[1.16]" : ""}`} /> : <ShowcasePanel screen={screen} slideIndex={slideIndex} />}
         </div>
-        <section className={isIntro ? "flex h-full min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-0 min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
-        <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-0 max-w-[560px] px-6 py-6 sm:px-6 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
+        <section className={isIntro ? "flex min-h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible" : "flex min-h-0 min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"}>
+        <div className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-dvh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}>
           <div className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden md:flex" : ""}`}>
             <div className={isFirstIntroSlide ? "" : "lg:hidden"}><Brand /></div>
             {!isFirstIntroSlide && <div className="hidden lg:block" />}
@@ -295,7 +295,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             ) : <span className="text-sm font-semibold text-muted-foreground">Teacher workspace</span>}
           </div>
 
-          <div className={isIntro ? "flex min-h-0 flex-1 flex-col pt-4 md:pt-0" : showLoginHeader ? "md:my-auto md:block md:flex-none md:py-10" : "my-auto py-10 md:my-0 md:py-0"}>
+          <div className={isIntro ? "flex min-h-0 flex-1 flex-col pt-4 md:pt-0" : showLoginHeader ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10" : "my-auto py-10 md:my-0 md:py-0"}>
             {showLoginHeader && (
               <div className="md:hidden">
                 <div className="mb-8 flex justify-center"><Brand /></div>
@@ -312,13 +312,13 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                       <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={appleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Apple</button>
                       <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
                     </div>
-                    <div className="mt-5 mb-4 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
+                    <div className="mt-7 mb-7 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
                     <form className="flex flex-col gap-2.5" onSubmit={submitLogin}>
                       <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
                       <label className="relative block"><span className="sr-only">Password</span><LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Password" type={showPassword ? "text" : "password"} autoComplete="current-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${signupInputClass} pl-12 pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></label>
                       <div className="mt-0.5 flex justify-start"><button type="button" onClick={() => go("forgot")} className="min-h-9 text-sm text-muted-foreground hover:text-icon-accent hover:underline">Forgot Password?</button></div>
                       {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
-                      <button type="submit" className={`${filledButton} mt-[10px] w-full`}>Login</button>
+                      <button type="submit" className={`${filledButton} mt-[18px] w-full`}>Login</button>
                     </form>
                   </div>
                 )}
@@ -338,7 +338,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                       </ul>
                       {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
                       <button type="submit" className={`${filledButton} mt-[18px] w-full`}>Sign Up</button>
-                      <p className="mt-1.5 text-center text-sm leading-5 text-muted-foreground">By signing up, you agree to our <a href="#privacy-policy" className="font-semibold text-icon-accent underline-offset-4 hover:underline">Privacy Policy</a></p>
+                      <p className="mt-4 text-center text-sm leading-5 text-muted-foreground">By signing up, you agree to our <a href="#privacy-policy" className="font-semibold text-icon-accent underline-offset-4 hover:underline">Privacy Policy</a></p>
                     </form>
                   </div>
                 )}
@@ -350,10 +350,10 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                   <img src={slideIllustration} alt="" className={`h-full w-full object-contain object-bottom md:object-center ${slideIndex === 1 ? "scale-[1.16]" : ""}`} />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left">
-                  <div className="flex h-[76px] flex-none items-start justify-center md:h-[88px] md:items-center md:justify-start">
+                  <div className="flex h-[76px] flex-none items-center justify-center md:h-[88px] md:items-center md:justify-start">
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                   </div>
-                  <div className="mt-2 flex h-[84px] flex-none items-start justify-center md:mt-3 md:h-[84px] md:items-center md:justify-start">
+                  <div className="mt-0 flex h-[84px] flex-none items-start justify-center md:mt-3 md:h-[84px] md:items-center md:justify-start">
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
                   <div className="mt-2 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
