@@ -350,7 +350,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                   <img src={slideIllustration} alt="" className={`h-full w-full object-contain object-bottom md:object-center ${slideIndex === 1 ? "translate-y-2" : ""}`} />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left">
-                  <div className="flex h-[160px] flex-none flex-col items-center justify-center gap-1 md:h-[184px] md:items-start">
+                  <div className="flex h-[148px] flex-none flex-col items-center justify-center gap-1 md:h-[172px] md:items-start">
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
