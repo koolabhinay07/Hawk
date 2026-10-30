@@ -353,10 +353,10 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                   <div className={`flex h-[76px] flex-none justify-center md:h-[88px] md:justify-start ${slideIndex === 0 ? "items-start md:items-center" : "items-center"}`}>
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                   </div>
-                  <div className="mt-2 flex h-[84px] flex-none items-center justify-center md:mt-3 md:h-[84px] md:justify-start">
+                  <div className={`flex h-[84px] flex-none justify-center md:mt-3 md:h-[84px] md:justify-start md:items-center ${slideIndex === 0 ? "-mt-7 items-start" : "mt-2 items-center"}`}>
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
-                  <div className="mt-2 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+                  <div className={`flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center ${slideIndex === 0 ? "-mt-1.5" : "mt-2"}`} role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
                   </div>
                   {isFirstIntroSlide || slideIndex === 1 ? (
