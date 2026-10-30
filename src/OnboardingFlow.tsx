@@ -312,13 +312,13 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                       <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={appleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Apple</button>
                       <button type="button" onClick={() => onComplete()} className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"><img src={googleIcon} alt="" aria-hidden="true" className="size-5 shrink-0 object-contain" />Login with Google</button>
                     </div>
-                    <div className="mt-7 mb-7 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
+                    <div className="mt-5 mb-4 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px grow bg-border" /><span>or continue with email</span><span className="h-px grow bg-border" /></div>
                     <form className="flex flex-col gap-2.5" onSubmit={submitLogin}>
                       <label className="relative block"><span className="sr-only">Email</span><Mail aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" className={`${signupInputClass} pl-12`} /></label>
                       <label className="relative block"><span className="sr-only">Password</span><LockKeyhole aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><input aria-label="Password" type={showPassword ? "text" : "password"} autoComplete="current-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${signupInputClass} pl-12 pr-12`} /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></label>
                       <div className="mt-0.5 flex justify-start"><button type="button" onClick={() => go("forgot")} className="min-h-9 text-sm text-muted-foreground hover:text-icon-accent hover:underline">Forgot Password?</button></div>
                       {error && <p role="alert" className="text-sm text-accent-foreground">{error}</p>}
-                      <button type="submit" className={`${filledButton} mt-[18px] w-full`}>Login</button>
+                      <button type="submit" className={`${filledButton} mt-[10px] w-full`}>Login</button>
                     </form>
                   </div>
                 )}
@@ -350,10 +350,10 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                   <img src={slideIllustration} alt="" className="h-full w-full object-contain object-bottom md:object-center" />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-auto md:pb-0 md:text-left">
-                  <div className="flex h-auto flex-none items-center justify-center md:h-[88px] md:justify-start">
+                  <div className="flex h-[76px] flex-none items-center justify-center md:h-[88px] md:justify-start">
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                   </div>
-                  <div className="mt-2 flex h-auto flex-none items-center justify-center md:mt-3 md:h-[84px] md:justify-start">
+                  <div className="mt-2 flex h-[84px] flex-none items-center justify-center md:mt-3 md:h-[84px] md:justify-start">
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
                   <div className="mt-2 flex h-[6px] flex-none items-center justify-center gap-2.5 md:mt-6 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
