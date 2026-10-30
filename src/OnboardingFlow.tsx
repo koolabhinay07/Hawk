@@ -354,11 +354,11 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             )}
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-                <div className="mb-6 flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden">
+                <div className={`flex min-h-0 basis-0 flex-1 justify-center md:hidden ${isFirstIntroSlide ? "mb-2 items-end" : "mb-6 items-center"}`}>
                   <img src={slideIllustration} alt="" className="h-full max-h-[520px] w-auto max-w-full object-contain object-center" />
                 </div>
-                <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left">
-                  <div className="flex h-[148px] flex-none flex-col items-center justify-center gap-1 md:h-[172px] md:items-start">
+                <div className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${isFirstIntroSlide ? "mt-0 h-auto" : "mt-auto h-[370px]"}`}>
+                  <div className={`flex flex-none flex-col items-center md:h-[172px] md:items-start ${isFirstIntroSlide ? "h-auto justify-start gap-2 md:justify-center" : "h-[148px] justify-center gap-1"}`}>
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
