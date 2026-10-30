@@ -25,7 +25,7 @@ type FlowScreen = "intro" | "login" | "signup" | "email-verify" | "email-verifie
 const slides = [
   {
     eyebrow: "A better school day starts here",
-    title: "Your school day, Simplified.",
+    title: "Your school day, Simplified",
     body: "From attendance to proxies — everything a teacher needs, in one place.",
     points: ["Mark attendance instantly", "Send notices to parents instantly", "Track your class results"],
   },
@@ -346,11 +346,11 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             )}
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-                <div className="flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden">
+                <div className={`flex min-h-0 basis-0 flex-1 items-center justify-center md:hidden ${slideIndex === 0 ? "mb-6" : ""}`}>
                   <img src={slideIllustration} alt="" className="h-full w-full object-contain object-bottom md:object-center" />
                 </div>
                 <div className="mt-auto flex h-[370px] flex-none flex-col pb-2 text-center md:mt-0 md:h-auto md:pb-0 md:text-left">
-                  <div className="flex h-[76px] flex-none items-center justify-center md:h-[88px] md:justify-start">
+                  <div className={`flex h-[76px] flex-none justify-center md:h-[88px] md:justify-start ${slideIndex === 0 ? "items-start md:items-center" : "items-center"}`}>
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                   </div>
                   <div className="mt-2 flex h-[84px] flex-none items-center justify-center md:mt-3 md:h-[84px] md:justify-start">
