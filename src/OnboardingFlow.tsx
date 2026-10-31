@@ -354,7 +354,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
             )}
             {screen === "intro" && (
               <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-              <div className={`flex h-[34dvh] min-h-[220px] max-h-[360px] flex-none justify-center md:hidden ${isFirstIntroSlide ? "mb-2 items-end" : "mb-6 items-center"}`}>
+  <div className={`flex h-[34dvh] min-h-[220px] max-h-[360px] flex-none justify-center md:hidden ${isFirstIntroSlide ? "mt-[18px] mb-4 items-end" : "mb-6 items-center"}`}>
                 <img src={slideIllustration} alt="" className="h-full w-full max-w-full object-contain object-center" />
                 </div>
                 <div className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${isFirstIntroSlide ? "mt-0 h-auto" : "mt-auto h-[370px]"}`}>
@@ -362,7 +362,7 @@ export default function OnboardingFlow({ onComplete }: { onComplete: (profile?: 
                     <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">{slide.title}</h1>
                     <p className="max-w-lg text-base leading-7 text-muted-foreground">{slide.body}</p>
                   </div>
-                  <div className="mt-1 flex h-[6px] flex-none items-center justify-center gap-2.5 md:justify-center" role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
+      <div className={`${isFirstIntroSlide ? "mt-2 md:mt-1" : "mt-1"} flex h-[6px] flex-none items-center justify-center gap-2.5 md:justify-center`} role="group" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}>
                     {slides.map((item, index) => <span key={item.title} className={`h-[6px] rounded-full transition-all ${index === slideIndex ? "w-5 bg-primary" : "w-[6px] bg-muted-foreground/50"}`} />)}
                   </div>
                   {isFirstIntroSlide || slideIndex === 1 ? (
