@@ -365,9 +365,9 @@ export default function OnboardingFlow({
     "min-h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20";
   const signupInputClass = inputClass.replace("text-sm", "text-base");
   const filledButton =
-    "inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+    "inline-flex h-[66px] min-h-[66px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
   const outlinedButton =
-    "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
+    "inline-flex h-[66px] min-h-[66px] shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
   const isIntro = screen === "intro";
   const isFirstIntroSlide = isIntro && slideIndex === 0;
   const showLoginHeader = screen === "login" || screen === "signup";
@@ -478,7 +478,7 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? `flex min-h-0 flex-1 flex-col ${isFirstIntroSlide ? "pt-[34px]" : "pt-4"} md:pt-0`
+                  ? `flex min-h-0 flex-1 flex-col ${isFirstIntroSlide ? "pt-[36px]" : "pt-4"} md:pt-0`
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
@@ -535,7 +535,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[66px] min-h-[66px] shrink-0 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={appleIcon}
@@ -548,7 +548,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[66px] min-h-[66px] shrink-0 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={googleIcon}
@@ -875,7 +875,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={goLogin}
-                          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          className="inline-flex h-[66px] min-h-[66px] shrink-0 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
                         >
                           Skip
                         </button>
@@ -893,7 +893,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => go("signup")}
-                          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          className="inline-flex h-[66px] min-h-[66px] shrink-0 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
                         >
                           Sign up
                         </button>
@@ -1166,7 +1166,7 @@ export default function OnboardingFlow({
                     <button
                       type="button"
                       onClick={goLogin}
-                      className="min-h-10 w-full rounded-full text-sm font-semibold text-muted-foreground hover:bg-muted"
+                      className="h-[66px] min-h-[66px] shrink-0 w-full rounded-full text-sm font-semibold text-muted-foreground hover:bg-muted"
                     >
                       Cancel
                     </button>
