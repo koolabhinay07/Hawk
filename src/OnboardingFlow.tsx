@@ -478,7 +478,7 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? "flex min-h-0 flex-1 flex-col pt-4 md:pt-0"
+                  ? `flex min-h-0 flex-1 flex-col ${isFirstIntroSlide ? "pt-[34px]" : "pt-4"} md:pt-0`
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
@@ -825,7 +825,7 @@ export default function OnboardingFlow({
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
-                    className={`flex h-[34dvh] min-h-[220px] max-h-[360px] flex-none justify-center md:hidden ${isFirstIntroSlide ? "mt-[56px] mb-16 items-end" : "mb-6 items-center"}`}
+                    className={`flex flex-none justify-center md:hidden ${isFirstIntroSlide ? "mb-4 aspect-[464/258] w-full items-start" : "h-[34dvh] min-h-[220px] max-h-[360px] mb-6 items-center"}`}
                   >
                     <img
                       src={slideIllustration}
@@ -834,7 +834,7 @@ export default function OnboardingFlow({
                     />
                   </div>
                   <div
-                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${isFirstIntroSlide ? "-mt-[50px] h-auto" : "mt-auto h-[370px]"}`}
+                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${isFirstIntroSlide ? "mt-0 h-auto" : "mt-auto h-[370px]"}`}
                   >
                     <div
                       className={`flex flex-none flex-col items-center md:h-[172px] md:items-start ${isFirstIntroSlide ? "h-auto justify-start gap-2 md:justify-center" : "h-[148px] justify-center gap-1"}`}
