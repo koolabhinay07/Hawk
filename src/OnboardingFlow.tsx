@@ -422,7 +422,7 @@ export default function OnboardingFlow({
           }
         >
           <div
-            className={`mx-auto flex w-full grow flex-col ${isFirstIntroSlide ? "justify-center" : ""} ${isIntro ? "min-h-dvh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}
+            className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-dvh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}
           >
             <div
               className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden md:flex" : ""}`}
@@ -847,7 +847,7 @@ export default function OnboardingFlow({
                       </p>
                     </div>
                     <div
-                      className={`${isFirstIntroSlide ? "h-[14px] pt-[8px] md:mt-1 md:h-[6px] md:pt-0" : "mt-1 h-[6px]"} flex flex-none items-center justify-center gap-2.5 md:justify-center`}
+                      className={`${isFirstIntroSlide ? "h-[22px] pt-[16px] md:mt-1 md:h-[6px] md:pt-0" : "mt-1 h-[6px]"} flex flex-none items-center justify-center gap-2.5 md:justify-center`}
                       role="group"
                       aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
                     >
