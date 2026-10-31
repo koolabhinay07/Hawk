@@ -834,7 +834,7 @@ export default function OnboardingFlow({
                     />
                   </div>
                   <div
-                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${isFirstIntroSlide ? "mt-0 h-auto" : "mt-auto h-[370px]"}`}
+                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${isFirstIntroSlide ? "-mt-[50px] h-auto" : "mt-auto h-[370px]"}`}
                   >
                     <div
                       className={`flex flex-none flex-col items-center md:h-[172px] md:items-start ${isFirstIntroSlide ? "h-auto justify-start gap-2 md:justify-center" : "h-[148px] justify-center gap-1"}`}
