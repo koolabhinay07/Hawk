@@ -825,7 +825,7 @@ export default function OnboardingFlow({
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
-                    className={`flex h-[34dvh] min-h-[220px] max-h-[360px] flex-none justify-center md:hidden ${isFirstIntroSlide ? "mt-[34px] mb-4 items-end" : "mb-6 items-center"}`}
+                    className={`flex h-[34dvh] min-h-[220px] max-h-[360px] flex-none justify-center md:hidden ${isFirstIntroSlide ? "mt-[34px] mb-0 items-end" : "mb-6 items-center"}`}
                   >
                     <img
                       src={slideIllustration}
