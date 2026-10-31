@@ -968,7 +968,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     <button
                       type="button"
                       onClick={() => document.getElementById("today-classes")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                      className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full border border-border bg-muted px-5 text-sm font-medium text-foreground transition-colors hover:bg-border"
+                      className="mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl border border-border bg-muted px-5 text-sm font-medium text-foreground transition-colors hover:bg-border"
                     >
                       View timetable
                     </button>
@@ -976,7 +976,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       <button
                         type="button"
                         onClick={() => openAttendance(attendanceSummary.retroactiveEligiblePeriods[0])}
-                        className="mt-3 flex min-h-11 w-full items-center justify-center rounded-full px-4 text-sm font-medium text-icon-accent hover:bg-primary-soft"
+                        className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium text-icon-accent hover:bg-primary-soft"
                       >
                         {attendanceSummary.eligibleForRetroactiveMarkingCount} {attendanceSummary.eligibleForRetroactiveMarkingCount === 1 ? "class needs" : "classes need"} attendance
                       </button>
@@ -991,7 +991,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => openAttendance(shownActivePeriod)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark Attendance
                   </button>
@@ -999,7 +999,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => setConductedPeriods((periods) => ({ ...periods, [shownActivePeriod.period]: Date.now() }))}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark as Conducted
                   </button>
@@ -1007,7 +1007,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => openAttendance(shownGracePeriodStatus.period)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark Attendance
                   </button>
@@ -1015,7 +1015,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => setConductedPeriods((periods) => ({ ...periods, [shownGracePeriodStatus.period.period]: Date.now() }))}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#d6ae3b] bg-[#fff8e1] px-5 text-base font-semibold text-[#6b4f00] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#d6ae3b] bg-[#fff8e1] px-5 text-base font-semibold text-[#6b4f00] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Mark class as conducted?
                   </button>
@@ -1024,7 +1024,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => cancelProxyRequest(cancelableProxyRequestPeriod)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Cancel Request for {cancelableProxyRequestPeriod.period}
                   </button>
@@ -1033,7 +1033,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => cancelSwapRequest(cancelableSwapRequest.id)}
-                    className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Cancel Swap Request for {cancelableSwapRequest.period}
                   </button>
