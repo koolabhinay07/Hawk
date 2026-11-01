@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
-import onboardingSlideThree from "./assets/onboarding-slide-3.svg";
 import appleIcon from "./assets/apple-icon.svg";
 import googleIcon from "./assets/google-icon.svg";
 import {
@@ -20,8 +18,8 @@ import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
 
 const onboardingIllustrations = [
   onboardingSlideOne,
-  onboardingSlideTwo,
-  onboardingSlideThree,
+  onboardingSlideOne,
+  onboardingSlideOne,
 ];
 
 type FlowScreen =
@@ -478,7 +476,7 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? `flex min-h-0 flex-col ${isFirstIntroSlide ? "flex-1 justify-center pt-[20vh] md:justify-center md:pt-0" : "flex-1 pt-4"} md:pt-0`
+                  ? `flex min-h-0 flex-col "flex-1 justify-center pt-[20vh] md:justify-center md:pt-0" md:pt-0`
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
@@ -825,7 +823,7 @@ export default function OnboardingFlow({
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
-                    className={`flex flex-none justify-center md:hidden ${isFirstIntroSlide ? "mb-4 aspect-[464/258] w-full items-start" : "h-[34dvh] min-h-[220px] max-h-[360px] mb-6 items-center"}`}
+                    className={`flex flex-none justify-center md:hidden "mb-4 aspect-[464/258] w-full items-start"`}
                   >
                     <img
                       src={slideIllustration}
@@ -834,10 +832,10 @@ export default function OnboardingFlow({
                     />
                   </div>
                   <div
-                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${isFirstIntroSlide ? "mt-0 h-auto" : "mt-auto h-[370px]"}`}
+                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left "mt-0 h-auto"`}
                   >
                     <div
-                      className={`flex flex-none flex-col items-center md:h-[172px] md:items-start ${isFirstIntroSlide ? "h-auto justify-start gap-2 md:justify-center" : "h-[148px] justify-center gap-1"}`}
+                      className={`flex flex-none flex-col items-center md:h-[172px] md:items-start "h-auto justify-start gap-2 md:justify-center"`}
                     >
                       <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">
                         {slide.title}
@@ -847,7 +845,7 @@ export default function OnboardingFlow({
                       </p>
                     </div>
                     <div
-                      className={`${isFirstIntroSlide ? "h-[22px] pt-[16px] md:mt-1 md:h-[6px] md:pt-0" : "mt-1 h-[6px]"} flex flex-none items-center justify-center gap-2.5 md:justify-center`}
+                      className={`"h-[22px] pt-[16px] md:mt-1 md:h-[6px] md:pt-0" flex flex-none items-center justify-center gap-2.5 md:justify-center`}
                       role="group"
                       aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
                     >
