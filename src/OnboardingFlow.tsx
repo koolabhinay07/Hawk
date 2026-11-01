@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import appleIcon from "./assets/apple-icon.svg";
 import googleIcon from "./assets/google-icon.svg";
 import {
@@ -368,12 +368,80 @@ export default function OnboardingFlow({
     "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
   const outlinedButton =
     "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
+  const introRootRef = useRef<HTMLElement>(null);
+  const contentGroupRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const baselineRef = useRef<{ width: number; height: number; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (screen !== "intro") return;
+    const root = introRootRef.current;
+    const group = contentGroupRef.current;
+    const cta = ctaRef.current;
+    if (!root || !group || !cta) return;
+
+    let active = true;
+    const align = () => {
+      if (!active) return;
+      const rootRect = root.getBoundingClientRect();
+      if (slideIndex === 0) {
+        baselineRef.current = {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          top: cta.getBoundingClientRect().top - rootRect.top,
+        };
+        return;
+      }
+
+      let baseline = baselineRef.current;
+      if (!baseline || baseline.width !== window.innerWidth || baseline.height !== window.innerHeight) {
+        // Measure the original slide at the current viewport without changing the visible slide.
+        const reference = root.cloneNode(true) as HTMLElement;
+        reference.setAttribute("aria-hidden", "true");
+        reference.style.cssText = `position:fixed;left:-20000px;top:0;width:${rootRect.width}px;visibility:hidden;pointer-events:none;`;
+        reference.querySelectorAll<HTMLImageElement>("[data-intro-illustration]").forEach(img => { img.src = onboardingSlideOne; });
+        const referenceImage = reference.querySelector<HTMLElement>("[data-intro-image-frame]");
+        if (referenceImage) referenceImage.style.translate = "none";
+        const referenceGroup = reference.querySelector<HTMLElement>("[data-intro-content]")!;
+        referenceGroup.style.transform = "none";
+        referenceGroup.querySelector("h1")!.textContent = slides[0].title;
+        referenceGroup.querySelector("p")!.textContent = slides[0].body;
+        document.body.append(reference);
+        baseline = {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          top: reference.querySelector("[data-intro-ctas]")!.getBoundingClientRect().top - reference.getBoundingClientRect().top,
+        };
+        reference.remove();
+        baselineRef.current = baseline;
+      }
+      // Translate the complete content group; its internal layout and SVG sibling stay intact.
+      group.style.transform = "none";
+      const delta = baseline.top - (cta.getBoundingClientRect().top - rootRect.top);
+      group.style.transform = `translateY(${delta}px)`;
+    };
+
+    align();
+    const observer = new ResizeObserver(align);
+    observer.observe(root);
+    observer.observe(group);
+    window.addEventListener("resize", align);
+    document.fonts.ready.then(align);
+    return () => {
+      active = false;
+      observer.disconnect();
+      window.removeEventListener("resize", align);
+      group.style.removeProperty("transform");
+    };
+  }, [screen, slideIndex]);
+
   const isIntro = screen === "intro";
   const isFirstIntroSlide = isIntro && slideIndex === 0;
   const showLoginHeader = screen === "login" || screen === "signup";
 
   return (
     <main
+      ref={introRootRef}
       className={
         isIntro
           ? "relative min-h-dvh bg-background text-foreground md:flex md:h-dvh md:min-h-dvh md:items-center md:justify-center md:bg-[#f7f8f3]"
@@ -406,6 +474,7 @@ export default function OnboardingFlow({
         >
           {isIntro ? (
             <img
+              data-intro-illustration
               src={slideIllustration}
               alt=""
               className="h-full max-h-[520px] w-auto max-w-full object-contain"
@@ -825,16 +894,21 @@ export default function OnboardingFlow({
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
+                    data-intro-image-frame
+                    style={slideIndex > 0 ? { translate: "0 -160px" } : undefined}
                     className={"mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"}
                   >
                     <img
-                      src={slideIllustration}
+                      data-intro-illustration
+              src={slideIllustration}
                       alt=""
                       className="h-full w-full max-w-full object-contain object-center"
                     />
                   </div>
                   <div
-                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left "mt-0 h-auto" ${slideIndex === 1 ? "-translate-y-40" : slideIndex === 2 ? "-translate-y-[170px]" : ""}`}
+                    ref={contentGroupRef}
+                    data-intro-content
+                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left "mt-0 h-auto"`}
                   >
                     <div
                       className={`flex flex-none flex-col items-center md:h-[172px] md:items-start "h-auto justify-start gap-2 md:justify-center"`}
@@ -859,7 +933,7 @@ export default function OnboardingFlow({
                       ))}
                     </div>
                     {isFirstIntroSlide || slideIndex === 1 ? (
-                      <div className={`mt-3 flex flex-col gap-3 md:mt-5`}>
+                      <div ref={ctaRef} data-intro-ctas className={`mt-3 flex flex-col gap-3 md:mt-5`}>
                         <button
                           type="button"
                           onClick={() =>
@@ -881,7 +955,7 @@ export default function OnboardingFlow({
                         </button>
                       </div>
                     ) : (
-                      <div className={`mt-3 flex flex-col gap-3 md:mt-5`}>
+                      <div ref={ctaRef} data-intro-ctas className={`mt-3 flex flex-col gap-3 md:mt-5`}>
                         <button
                           type="button"
                           onClick={() => go("login")}
