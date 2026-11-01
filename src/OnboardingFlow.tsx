@@ -823,7 +823,7 @@ export default function OnboardingFlow({
                 </div>
               )}
               {screen === "intro" && (
-                <div className={`animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center ${slideIndex > 0 ? "-translate-y-40" : ""}`}>
+                <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
                     className={"mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"}
                   >
@@ -834,7 +834,7 @@ export default function OnboardingFlow({
                     />
                   </div>
                   <div
-                    className={`flex ${slideIndex > 0 ? "flex-1" : "flex-none"} flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left "mt-0 h-auto"`}
+                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left "mt-0 h-auto" ${slideIndex === 1 ? "-translate-y-40" : slideIndex === 2 ? "-translate-y-[170px]" : ""}`}
                   >
                     <div
                       className={`flex flex-none flex-col items-center md:h-[172px] md:items-start "h-auto justify-start gap-2 md:justify-center"`}
@@ -859,7 +859,7 @@ export default function OnboardingFlow({
                       ))}
                     </div>
                     {isFirstIntroSlide || slideIndex === 1 ? (
-                      <div className={`${slideIndex > 0 ? "mt-auto" : "mt-3 md:mt-5"} flex flex-col gap-3`}>
+                      <div className={`mt-3 flex flex-col gap-3 md:mt-5`}>
                         <button
                           type="button"
                           onClick={() =>
@@ -881,7 +881,7 @@ export default function OnboardingFlow({
                         </button>
                       </div>
                     ) : (
-                      <div className={`${slideIndex > 0 ? "mt-auto" : "mt-3 md:mt-5"} flex flex-col gap-3`}>
+                      <div className={`mt-3 flex flex-col gap-3 md:mt-5`}>
                         <button
                           type="button"
                           onClick={() => go("login")}
