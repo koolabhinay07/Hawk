@@ -823,7 +823,7 @@ export default function OnboardingFlow({
                 </div>
               )}
               {screen === "intro" && (
-                <div className={`animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center ${slideIndex > 0 ? "-translate-y-40" : ""}`}>
+                <div className={`animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center ${slideIndex === 1 ? "-translate-y-40" : slideIndex === 2 ? "-translate-y-[170px]" : ""}`}>
                   <div
                     className={"mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"}
                   >
