@@ -16,11 +16,12 @@ import {
 } from "lucide-react";
 import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
 import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
+import onboardingSlideThree from "./assets/onboarding-slide-3.svg";
 
 const onboardingIllustrations = [
   onboardingSlideOne,
   onboardingSlideTwo,
-  onboardingSlideOne,
+  onboardingSlideThree,
 ];
 
 type FlowScreen =
@@ -477,7 +478,7 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? `flex min-h-0 flex-col flex-1 justify-center pt-[20vh] md:justify-center md:pt-0`
+                  ? `flex min-h-0 flex-col flex-1 justify-center pt-[32px] md:justify-center md:pt-0`
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
