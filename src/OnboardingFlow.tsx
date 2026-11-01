@@ -478,7 +478,6 @@ export default function OnboardingFlow({
               src={slideIllustration}
               alt=""
               className="h-full max-h-[520px] w-auto max-w-full object-contain"
-              style={slideIndex > 0 ? { transform: "translateY(500px)" } : undefined}
             />
           ) : (
             <ShowcasePanel screen={screen} slideIndex={slideIndex} />
@@ -904,6 +903,7 @@ export default function OnboardingFlow({
               src={slideIllustration}
                       alt=""
                       className="h-full w-full max-w-full object-contain object-center"
+                      style={slideIndex > 0 ? { transform: "translateY(40px)" } : undefined}
                     />
                   </div>
                   <div
