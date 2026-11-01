@@ -914,7 +914,7 @@ export default function OnboardingFlow({
                     <div
                       className={`flex flex-none flex-col items-center md:h-[172px] md:items-start "h-auto justify-start gap-2 md:justify-center"`}
                     >
-                      <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl">
+                      <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl md:mt-8">
                         {slide.title}
                       </h1>
                       <p className="max-w-lg text-base leading-7 text-muted-foreground">
