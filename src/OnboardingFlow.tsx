@@ -15,10 +15,11 @@ import {
   UserRound,
 } from "lucide-react";
 import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
+import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
 
 const onboardingIllustrations = [
   onboardingSlideOne,
-  onboardingSlideOne,
+  onboardingSlideTwo,
   onboardingSlideOne,
 ];
 
@@ -476,7 +477,7 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? `flex min-h-0 flex-col "flex-1 justify-center pt-[20vh] md:justify-center md:pt-0" md:pt-0`
+                  ? `flex min-h-0 flex-col flex-1 justify-center pt-[20vh] md:justify-center md:pt-0`
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
@@ -823,7 +824,7 @@ export default function OnboardingFlow({
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
-                    className={`flex flex-none justify-center md:hidden "mb-4 aspect-[464/258] w-full items-start"`}
+                    className={"mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"}
                   >
                     <img
                       src={slideIllustration}
@@ -845,7 +846,7 @@ export default function OnboardingFlow({
                       </p>
                     </div>
                     <div
-                      className={`"h-[22px] pt-[16px] md:mt-1 md:h-[6px] md:pt-0" flex flex-none items-center justify-center gap-2.5 md:justify-center`}
+                      className={"h-[22px] flex flex-none items-center justify-center gap-2.5 pt-[16px] md:mt-1 md:h-[6px] md:justify-center md:pt-0"}
                       role="group"
                       aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
                     >
