@@ -366,6 +366,7 @@ export default function OnboardingFlow({
   const signupInputClass = inputClass.replace("text-sm", "text-base");
   const filledButton =
     "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-[28px] bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+  const introFilledButton = filledButton.replaceAll("60px", "56px");
   const outlinedButton =
     "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
   const introRootRef = useRef<HTMLElement>(null);
@@ -976,7 +977,7 @@ export default function OnboardingFlow({
                               Math.min(index + 1, slides.length - 1),
                             )
                           }
-                          className={`${filledButton} w-full`}
+                          className={`${introFilledButton} w-full`}
                         >
                           Next
                           <ArrowRight className="size-4" />
@@ -984,7 +985,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={goLogin}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
                         >
                           Skip
                         </button>
@@ -994,7 +995,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => go("login")}
-                          className={`${filledButton} w-full`}
+                          className={`${introFilledButton} w-full`}
                         >
                           Log in
                           <ArrowRight className="size-4" />
@@ -1002,7 +1003,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => go("signup")}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
                         >
                           Sign up
                         </button>
