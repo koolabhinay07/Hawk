@@ -367,7 +367,7 @@ export default function OnboardingFlow({
   const filledButton =
     "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
   const outlinedButton =
-    "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
+    "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
   const introRootRef = useRef<HTMLElement>(null);
   const contentGroupRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -604,7 +604,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={appleIcon}
@@ -617,7 +617,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={googleIcon}
@@ -1241,7 +1241,7 @@ export default function OnboardingFlow({
                     <button
                       type="button"
                       onClick={goLogin}
-                      className="h-[60px] min-h-[60px] shrink-0 w-full rounded-full text-sm font-semibold text-muted-foreground hover:bg-muted"
+                      className="h-[60px] min-h-[60px] shrink-0 w-full rounded-2xl text-sm font-semibold text-muted-foreground hover:bg-muted"
                     >
                       Cancel
                     </button>
