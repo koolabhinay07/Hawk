@@ -937,7 +937,7 @@ export default function OnboardingFlow({
               src={slideIllustration}
                       alt=""
                       className="h-full w-full max-w-full object-contain object-center"
-                      style={slideIndex === 1 ? { transform: "translateY(10px)" } : slideIndex === 2 ? { transform: "translateY(-120px)" } : undefined}
+                      style={slideIndex === 1 ? { transform: "translateY(-90px)" } : slideIndex === 2 ? { transform: "translateY(-96px)" } : undefined}
                     />
                   </div>
                   <div
