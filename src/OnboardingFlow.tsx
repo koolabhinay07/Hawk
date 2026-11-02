@@ -384,6 +384,10 @@ export default function OnboardingFlow({
     const align = () => {
       if (!active) return;
       const rootRect = root.getBoundingClientRect();
+      if (slideIndex === 1 && window.innerWidth < 768) {
+        group.style.removeProperty("transform");
+        return;
+      }
       if (slideIndex === 0) {
         baselineRef.current = {
           width: window.innerWidth,
@@ -895,7 +899,7 @@ export default function OnboardingFlow({
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
                     data-intro-image-frame
-                    style={slideIndex > 0 ? { translate: "0 -160px" } : undefined}
+                    style={slideIndex === 2 ? { translate: "0 -160px" } : undefined}
                     className={"mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"}
                   >
                     <img
@@ -903,7 +907,7 @@ export default function OnboardingFlow({
               src={slideIllustration}
                       alt=""
                       className="h-full w-full max-w-full object-contain object-center"
-                      style={slideIndex > 0 ? { transform: "translateY(30px)" } : undefined}
+                      style={slideIndex === 2 ? { transform: "translateY(30px)" } : undefined}
                     />
                   </div>
                   <div
