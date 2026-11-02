@@ -385,7 +385,7 @@ export default function OnboardingFlow({
       if (!active) return;
       const rootRect = root.getBoundingClientRect();
       if (slideIndex === 1 && window.innerWidth < 768) {
-        group.style.transform = "translateY(-214px)";
+        group.style.transform = "translateY(-44px)";
         return;
       }
       if (slideIndex === 0) {
