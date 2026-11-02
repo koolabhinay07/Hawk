@@ -384,10 +384,6 @@ export default function OnboardingFlow({
     const align = () => {
       if (!active) return;
       const rootRect = root.getBoundingClientRect();
-      if (slideIndex === 1 && window.innerWidth < 768) {
-        group.style.removeProperty("transform");
-        return;
-      }
       if (slideIndex === 0) {
         baselineRef.current = {
           width: window.innerWidth,
