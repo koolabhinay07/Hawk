@@ -385,7 +385,31 @@ export default function OnboardingFlow({
       if (!active) return;
       const rootRect = root.getBoundingClientRect();
       if (slideIndex === 1 && window.innerWidth < 768) {
-        group.style.transform = "translateY(-101px)";
+        // Measure a hidden Slide 1 at this width, independent of Slide 2's taller SVG.
+        const reference = root.cloneNode(true) as HTMLElement;
+        reference.setAttribute("aria-hidden", "true");
+        reference.inert = true;
+        reference.style.cssText = `position:fixed;left:-20000px;top:0;width:${rootRect.width}px;visibility:hidden;pointer-events:none;`;
+        reference.querySelectorAll<HTMLImageElement>("[data-intro-illustration]").forEach(img => {
+          img.src = onboardingSlideOne;
+          img.width = 464;
+          img.height = 258;
+          img.style.aspectRatio = "464 / 258";
+          img.style.transform = "none";
+        });
+        const frame = reference.querySelector<HTMLElement>("[data-intro-image-frame]");
+        if (frame) frame.style.translate = "none";
+        const referenceGroup = reference.querySelector<HTMLElement>("[data-intro-content]")!;
+        referenceGroup.style.transform = "none";
+        referenceGroup.querySelector("h1")!.textContent = slides[0].title;
+        referenceGroup.querySelector("p")!.textContent = slides[0].body;
+        document.body.append(reference);
+        const targetTop = reference.querySelector("[data-intro-ctas]")!.getBoundingClientRect().top
+          - reference.getBoundingClientRect().top;
+        reference.remove();
+        group.style.transform = "none";
+        const currentTop = cta.getBoundingClientRect().top - rootRect.top;
+        group.style.transform = `translateY(${targetTop - currentTop}px)`;
         return;
       }
       if (slideIndex === 0) {
@@ -429,11 +453,17 @@ export default function OnboardingFlow({
     const observer = new ResizeObserver(align);
     observer.observe(root);
     observer.observe(group);
+    const slideTwoFrame = slideIndex === 1
+      ? root.querySelector<HTMLElement>("[data-intro-image-frame]") : null;
+    const slideTwoImage = slideTwoFrame?.querySelector("img");
+    if (slideTwoFrame) observer.observe(slideTwoFrame);
+    slideTwoImage?.addEventListener("load", align);
     window.addEventListener("resize", align);
     document.fonts.ready.then(align);
     return () => {
       active = false;
       observer.disconnect();
+      slideTwoImage?.removeEventListener("load", align);
       window.removeEventListener("resize", align);
       group.style.removeProperty("transform");
     };
