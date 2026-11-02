@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import appleIcon from "./assets/apple-icon.svg";
 import googleIcon from "./assets/google-icon.svg";
 import {
@@ -372,7 +378,11 @@ export default function OnboardingFlow({
   const introRootRef = useRef<HTMLElement>(null);
   const contentGroupRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
-  const baselineRef = useRef<{ width: number; height: number; top: number } | null>(null);
+  const baselineRef = useRef<{
+    width: number;
+    height: number;
+    top: number;
+  } | null>(null);
 
   useLayoutEffect(() => {
     if (screen !== "intro") return;
@@ -391,22 +401,29 @@ export default function OnboardingFlow({
         reference.setAttribute("aria-hidden", "true");
         reference.inert = true;
         reference.style.cssText = `position:fixed;left:-20000px;top:0;width:${rootRect.width}px;visibility:hidden;pointer-events:none;`;
-        reference.querySelectorAll<HTMLImageElement>("[data-intro-illustration]").forEach(img => {
-          img.src = onboardingSlideOne;
-          img.width = 464;
-          img.height = 258;
-          img.style.aspectRatio = "464 / 258";
-          img.style.transform = "none";
-        });
-        const frame = reference.querySelector<HTMLElement>("[data-intro-image-frame]");
+        reference
+          .querySelectorAll<HTMLImageElement>("[data-intro-illustration]")
+          .forEach((img) => {
+            img.src = onboardingSlideOne;
+            img.width = 464;
+            img.height = 258;
+            img.style.aspectRatio = "464 / 258";
+            img.style.transform = "none";
+          });
+        const frame = reference.querySelector<HTMLElement>(
+          "[data-intro-image-frame]",
+        );
         if (frame) frame.style.translate = "none";
-        const referenceGroup = reference.querySelector<HTMLElement>("[data-intro-content]")!;
+        const referenceGroup = reference.querySelector<HTMLElement>(
+          "[data-intro-content]",
+        )!;
         referenceGroup.style.transform = "none";
         referenceGroup.querySelector("h1")!.textContent = slides[0].title;
         referenceGroup.querySelector("p")!.textContent = slides[0].body;
         document.body.append(reference);
-        const targetTop = reference.querySelector("[data-intro-ctas]")!.getBoundingClientRect().top
-          - reference.getBoundingClientRect().top;
+        const targetTop =
+          reference.querySelector("[data-intro-ctas]")!.getBoundingClientRect()
+            .top - reference.getBoundingClientRect().top;
         reference.remove();
         group.style.transform = "none";
         const currentTop = cta.getBoundingClientRect().top - rootRect.top;
@@ -423,15 +440,27 @@ export default function OnboardingFlow({
       }
 
       let baseline = baselineRef.current;
-      if (!baseline || baseline.width !== window.innerWidth || baseline.height !== window.innerHeight) {
+      if (
+        !baseline ||
+        baseline.width !== window.innerWidth ||
+        baseline.height !== window.innerHeight
+      ) {
         // Measure the original slide at the current viewport without changing the visible slide.
         const reference = root.cloneNode(true) as HTMLElement;
         reference.setAttribute("aria-hidden", "true");
         reference.style.cssText = `position:fixed;left:-20000px;top:0;width:${rootRect.width}px;visibility:hidden;pointer-events:none;`;
-        reference.querySelectorAll<HTMLImageElement>("[data-intro-illustration]").forEach(img => { img.src = onboardingSlideOne; });
-        const referenceImage = reference.querySelector<HTMLElement>("[data-intro-image-frame]");
+        reference
+          .querySelectorAll<HTMLImageElement>("[data-intro-illustration]")
+          .forEach((img) => {
+            img.src = onboardingSlideOne;
+          });
+        const referenceImage = reference.querySelector<HTMLElement>(
+          "[data-intro-image-frame]",
+        );
         if (referenceImage) referenceImage.style.translate = "none";
-        const referenceGroup = reference.querySelector<HTMLElement>("[data-intro-content]")!;
+        const referenceGroup = reference.querySelector<HTMLElement>(
+          "[data-intro-content]",
+        )!;
         referenceGroup.style.transform = "none";
         referenceGroup.querySelector("h1")!.textContent = slides[0].title;
         referenceGroup.querySelector("p")!.textContent = slides[0].body;
@@ -439,14 +468,19 @@ export default function OnboardingFlow({
         baseline = {
           width: window.innerWidth,
           height: window.innerHeight,
-          top: reference.querySelector("[data-intro-ctas]")!.getBoundingClientRect().top - reference.getBoundingClientRect().top,
+          top:
+            reference
+              .querySelector("[data-intro-ctas]")!
+              .getBoundingClientRect().top -
+            reference.getBoundingClientRect().top,
         };
         reference.remove();
         baselineRef.current = baseline;
       }
       // Translate the complete content group; its internal layout and SVG sibling stay intact.
       group.style.transform = "none";
-      const delta = baseline.top - (cta.getBoundingClientRect().top - rootRect.top);
+      const delta =
+        baseline.top - (cta.getBoundingClientRect().top - rootRect.top);
       group.style.transform = `translateY(${delta}px)`;
     };
 
@@ -454,8 +488,10 @@ export default function OnboardingFlow({
     const observer = new ResizeObserver(align);
     observer.observe(root);
     observer.observe(group);
-    const slideTwoFrame = slideIndex === 1
-      ? root.querySelector<HTMLElement>("[data-intro-image-frame]") : null;
+    const slideTwoFrame =
+      slideIndex === 1
+        ? root.querySelector<HTMLElement>("[data-intro-image-frame]")
+        : null;
     const slideTwoImage = slideTwoFrame?.querySelector("img");
     if (slideTwoFrame) observer.observe(slideTwoFrame);
     slideTwoImage?.addEventListener("load", align);
@@ -930,14 +966,21 @@ export default function OnboardingFlow({
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
                     data-intro-image-frame
-                    className={"mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"}
+                    className="mb-4 flex aspect-[464/258] w-full flex-none items-center justify-center md:hidden"
                   >
                     <img
                       data-intro-illustration
-              src={slideIllustration}
+                      src={slideIllustration}
                       alt=""
-                      className="h-full w-full max-w-full object-contain object-center"
-                      style={slideIndex === 1 ? { transform: "translateY(-90px)" } : slideIndex === 2 ? { transform: "translateY(-96px)" } : undefined}
+                      className="block h-full w-full max-w-full object-contain object-center"
+                      style={{
+                        transform:
+                          slideIndex === 1
+                            ? "translateY(-90px)"
+                            : slideIndex === 2
+                              ? "translateY(-96px)"
+                              : undefined,
+                      }}
                     />
                   </div>
                   <div
@@ -956,7 +999,9 @@ export default function OnboardingFlow({
                       </p>
                     </div>
                     <div
-                      className={"h-[22px] flex flex-none items-center justify-center gap-2.5 pt-[16px] md:mt-1 md:h-[6px] md:justify-center md:pt-0"}
+                      className={
+                        "h-[22px] flex flex-none items-center justify-center gap-2.5 pt-[16px] md:mt-1 md:h-[6px] md:justify-center md:pt-0"
+                      }
                       role="group"
                       aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
                     >
@@ -968,7 +1013,11 @@ export default function OnboardingFlow({
                       ))}
                     </div>
                     {isFirstIntroSlide || slideIndex === 1 ? (
-                      <div ref={ctaRef} data-intro-ctas className={`mt-3 flex flex-col gap-3 md:mt-5`}>
+                      <div
+                        ref={ctaRef}
+                        data-intro-ctas
+                        className={`mt-3 flex flex-col gap-3 md:mt-5`}
+                      >
                         <button
                           type="button"
                           onClick={() =>
@@ -990,7 +1039,11 @@ export default function OnboardingFlow({
                         </button>
                       </div>
                     ) : (
-                      <div ref={ctaRef} data-intro-ctas className={`mt-3 flex flex-col gap-3 md:mt-5`}>
+                      <div
+                        ref={ctaRef}
+                        data-intro-ctas
+                        className={`mt-3 flex flex-col gap-3 md:mt-5`}
+                      >
                         <button
                           type="button"
                           onClick={() => go("login")}
