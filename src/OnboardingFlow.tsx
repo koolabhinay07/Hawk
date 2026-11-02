@@ -930,7 +930,7 @@ export default function OnboardingFlow({
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
                     data-intro-image-frame
-                    style={slideIndex === 1 ? { translate: "0 200px" } : slideIndex === 2 ? { translate: "0 30px" } : undefined}
+                    style={slideIndex === 1 ? { translate: "0 10px" } : slideIndex === 2 ? { translate: "0 30px" } : undefined}
                     className={"mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"}
                   >
                     <img
@@ -938,7 +938,7 @@ export default function OnboardingFlow({
               src={slideIllustration}
                       alt=""
                       className="h-full w-full max-w-full object-contain object-center"
-                      style={slideIndex === 1 ? { transform: "translateY(200px)" } : slideIndex === 2 ? { transform: "translateY(30px)" } : undefined}
+                      style={slideIndex === 1 ? { transform: "translateY(10px)" } : slideIndex === 2 ? { transform: "translateY(30px)" } : undefined}
                     />
                   </div>
                   <div
