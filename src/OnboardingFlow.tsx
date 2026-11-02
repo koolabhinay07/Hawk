@@ -845,7 +845,7 @@ export default function OnboardingFlow({
                               <li
                                 key={rule.label}
                                 aria-label={`${labels[index]}: ${met ? "met" : "not met"}`}
-                                className={`flex items-center gap-2 text-sm ${met ? "text-icon-accent" : "text-muted-foreground"}`}
+                                className={`flex items-center gap-2 text-sm ${met ? "text-icon-accent" : password.length > 0 ? "text-[#A85757]" : "text-muted-foreground"}`}
                               >
                                 {met ? (
                                   <Check
