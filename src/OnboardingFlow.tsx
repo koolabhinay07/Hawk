@@ -566,8 +566,8 @@ export default function OnboardingFlow({
         </div>
       )}
       {isIntro && (
-        <div className="absolute inset-x-0 top-0 z-10 hidden px-6 pt-6 md:block">
-          <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between">
+        <div className="absolute inset-x-0 top-0 z-10 hidden px-10 pt-10 md:block xl:px-14 xl:pt-14">
+          <div className="flex w-full items-center justify-between">
             <Brand />
             <span className="text-sm font-semibold text-muted-foreground">
               Teacher workspace
