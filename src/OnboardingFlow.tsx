@@ -1083,11 +1083,8 @@ export default function OnboardingFlow({
 
               {screen === "login" && (
                 <div className="hidden md:block">
-                  <p className="mb-2 text-sm font-semibold text-icon-accent">
-                    Welcome back
-                  </p>
                   <h1 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
-                    Welcome Back
+                    Welcome Back!
                   </h1>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     Sign in to your workspace and pick up where you left off.
@@ -1202,9 +1199,6 @@ export default function OnboardingFlow({
 
               {screen === "signup" && (
                 <div className="hidden md:block">
-                  <p className="mb-2 text-base font-semibold text-icon-accent">
-                    Create your teacher account
-                  </p>
                   <h1 className="text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
                     Welcome to Hawk
                   </h1>
@@ -1340,13 +1334,6 @@ export default function OnboardingFlow({
                     <button type="submit" className={`${filledButton} w-full`}>
                       Sign up
                       <ArrowRight className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={goLogin}
-                      className="h-[60px] min-h-[60px] shrink-0 w-full rounded-[8px] text-sm font-semibold text-muted-foreground hover:bg-muted"
-                    >
-                      Cancel
                     </button>
                   </form>
                   <p className="mt-2 text-center text-sm leading-5 text-muted-foreground">
