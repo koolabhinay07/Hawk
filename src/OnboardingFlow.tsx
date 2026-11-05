@@ -515,7 +515,7 @@ export default function OnboardingFlow({
       ref={introRootRef}
       className={
         isIntro
-          // ? "relative min-h-dvh bg-background text-foreground md:flex md:h-dvh md:min-h-dvh md:items-center md:justify-center md:bg-[#f7f8f3]"
+          ? "relative min-h-dvh bg-background text-foreground md:flex md:h-dvh md:min-h-dvh md:items-center md:justify-center md:bg-[#f7f8f3]"
           : "grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"
       }
     >
