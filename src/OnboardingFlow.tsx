@@ -23,6 +23,8 @@ import {
 import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
 import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
 import onboardingSlideThree from "./assets/onboarding-slide-3.svg";
+import loginIllustration from "./assets/login-illustration.svg";
+import signupIllustration from "./assets/signup-illustration.svg";
 
 const onboardingIllustrations = [
   onboardingSlideOne,
@@ -180,10 +182,21 @@ function ShowcasePanel({
   slideIndex: number;
 }) {
   const slide = slides[slideIndex];
+  const isAuthScreen = screen === "login" || screen === "signup";
+  const authIllustration =
+    screen === "signup" ? signupIllustration : loginIllustration;
   return (
-    <aside className="relative hidden min-h-dvh overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-14">
+    <aside className={`relative hidden min-h-dvh overflow-hidden lg:flex lg:flex-col lg:p-10 xl:p-14 ${isAuthScreen ? "bg-background text-foreground" : "justify-between bg-primary text-primary-foreground"}`}>
       <Brand />
-      <div className="relative mx-auto w-full max-w-xl py-12">
+      {isAuthScreen ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <img
+            src={authIllustration}
+            alt=""
+            className="max-h-[min(68dvh,630px)] w-full max-w-[630px] object-contain"
+          />
+        </div>
+      ) : <div className="relative mx-auto w-full max-w-xl py-12">
         {screen === "intro" ? (
           <>
             <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
@@ -239,9 +252,10 @@ function ShowcasePanel({
           </>
         )}
       </div>
-      <p className="relative text-sm text-primary-foreground/65">
+      }
+      {!isAuthScreen && <p className="relative text-sm text-primary-foreground/65">
         A shared workspace for better school days.
-      </p>
+      </p>}
     </aside>
   );
 }
