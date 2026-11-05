@@ -187,10 +187,11 @@ function ShowcasePanel({
     screen === "signup" ? signupIllustration : loginIllustration;
   return (
     <aside className={`relative hidden min-h-dvh overflow-hidden lg:flex lg:flex-col lg:p-10 xl:p-14 ${isAuthScreen ? "bg-background text-foreground" : "justify-between bg-primary text-primary-foreground"}`}>
-      <Brand />
+      {!isAuthScreen && <Brand />}
       {isAuthScreen ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <img
+            key={screen}
             src={authIllustration}
             alt=""
             className="max-h-[min(68dvh,630px)] w-full max-w-[630px] object-contain"
@@ -291,10 +292,11 @@ export default function OnboardingFlow({
   }, []);
 
   useEffect(() => {
-    onboardingIllustrations.forEach((src) => {
+    [...onboardingIllustrations, loginIllustration, signupIllustration].forEach((src) => {
       const image = new Image();
       image.decoding = "async";
       image.src = src;
+      void image.decode().catch(() => {});
     });
   }, []);
 
