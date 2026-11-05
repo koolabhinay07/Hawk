@@ -583,7 +583,7 @@ export default function OnboardingFlow({
                     role="tab"
                     aria-selected={screen === "login"}
                     onClick={() => go("login")}
-                    className={`min-h-9 rounded-[8px] px-4 text-sm font-medium transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
                   >
                     Log in
                   </button>
@@ -592,7 +592,7 @@ export default function OnboardingFlow({
                     role="tab"
                     aria-selected={screen === "signup"}
                     onClick={() => go("signup")}
-                    className={`min-h-9 rounded-[8px] px-4 text-sm font-medium transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
                   >
                     Sign up
                   </button>
