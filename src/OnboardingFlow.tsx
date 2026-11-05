@@ -371,10 +371,10 @@ export default function OnboardingFlow({
     "min-h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20";
   const signupInputClass = inputClass.replace("text-sm", "text-base");
   const filledButton =
-    "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-[28px] bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+    "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-[8px] bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:brightness-95 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
   const introFilledButton = filledButton.replaceAll("60px", "56px");
   const outlinedButton =
-    "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
+    "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
   const introRootRef = useRef<HTMLElement>(null);
   const contentGroupRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -583,7 +583,7 @@ export default function OnboardingFlow({
                     role="tab"
                     aria-selected={screen === "login"}
                     onClick={() => go("login")}
-                    className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    className={`min-h-9 rounded-[8px] px-4 text-sm font-medium transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
                   >
                     Log in
                   </button>
@@ -592,7 +592,7 @@ export default function OnboardingFlow({
                     role="tab"
                     aria-selected={screen === "signup"}
                     onClick={() => go("signup")}
-                    className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    className={`min-h-9 rounded-[8px] px-4 text-sm font-medium transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
                   >
                     Sign up
                   </button>
@@ -604,7 +604,7 @@ export default function OnboardingFlow({
                 <button
                   type="button"
                   onClick={goLogin}
-                  className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-sm font-semibold text-icon-accent hover:bg-primary-soft"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-[8px] px-3 text-sm font-semibold text-icon-accent hover:bg-primary-soft"
                 >
                   <ArrowLeft className="size-4" />
                   Log in
@@ -677,7 +677,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[8px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={appleIcon}
@@ -690,7 +690,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[8px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={googleIcon}
@@ -754,7 +754,7 @@ export default function OnboardingFlow({
                             onClick={() =>
                               setShowPassword((visible) => !visible)
                             }
-                            className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                            className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-[8px] text-muted-foreground hover:bg-muted"
                           >
                             {showPassword ? (
                               <EyeOff className="size-4" />
@@ -856,7 +856,7 @@ export default function OnboardingFlow({
                             onClick={() =>
                               setShowPassword((visible) => !visible)
                             }
-                            className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                            className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-[8px] text-muted-foreground hover:bg-muted"
                           >
                             {showPassword ? (
                               <EyeOff className="size-4" />
@@ -893,7 +893,7 @@ export default function OnboardingFlow({
                             onClick={() =>
                               setShowConfirmPassword((visible) => !visible)
                             }
-                            className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                            className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-[8px] text-muted-foreground hover:bg-muted"
                           >
                             {showConfirmPassword ? (
                               <EyeOff className="size-4" />
@@ -1037,7 +1037,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={goLogin}
-                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
                         >
                           Skip
                         </button>
@@ -1059,7 +1059,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => go("signup")}
-                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[28px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
                         >
                           Sign up
                         </button>
@@ -1153,7 +1153,7 @@ export default function OnboardingFlow({
                             showPassword ? "Hide password" : "Show password"
                           }
                           onClick={() => setShowPassword((visible) => !visible)}
-                          className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                          className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-[8px] text-muted-foreground hover:bg-muted"
                         >
                           {showPassword ? (
                             <EyeOff className="size-4" />
@@ -1241,7 +1241,7 @@ export default function OnboardingFlow({
                             showPassword ? "Hide password" : "Show password"
                           }
                           onClick={() => setShowPassword((visible) => !visible)}
-                          className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                          className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-[8px] text-muted-foreground hover:bg-muted"
                         >
                           {showPassword ? (
                             <EyeOff className="size-4" />
@@ -1307,7 +1307,7 @@ export default function OnboardingFlow({
                           onClick={() =>
                             setShowConfirmPassword((visible) => !visible)
                           }
-                          className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                          className="absolute right-1 top-1 flex size-10 items-center justify-center rounded-[8px] text-muted-foreground hover:bg-muted"
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="size-4" />
@@ -1332,7 +1332,7 @@ export default function OnboardingFlow({
                     <button
                       type="button"
                       onClick={goLogin}
-                      className="h-[60px] min-h-[60px] shrink-0 w-full rounded-[28px] text-sm font-semibold text-muted-foreground hover:bg-muted"
+                      className="h-[60px] min-h-[60px] shrink-0 w-full rounded-[8px] text-sm font-semibold text-muted-foreground hover:bg-muted"
                     >
                       Cancel
                     </button>
