@@ -974,13 +974,21 @@ export default function OnboardingFlow({
                       data-intro-illustration
                       src={slideIllustration}
                       alt=""
-                      className="block h-full w-full object-contain object-center"
+                      className={
+                        slideIndex === 0
+                          ? "block h-full w-full object-contain object-center"
+                          : "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[85px] object-contain object-center"
+                      }
                     />
                   </div>
                   <div
                     ref={contentGroupRef}
                     data-intro-content
-                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left "mt-0 h-auto"`}
+                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
+                      slideIndex === 2
+                        ? "-translate-y-[33px] md:translate-y-0"
+                        : ""
+                    }`}
                   >
                     <div
                       className={`flex flex-none flex-col items-center md:h-[172px] md:items-start "h-auto justify-start gap-2 md:justify-center"`}
