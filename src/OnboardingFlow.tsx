@@ -385,7 +385,8 @@ export default function OnboardingFlow({
   } | null>(null);
 
   useLayoutEffect(() => {
-    if (screen !== "intro") return;
+    // if (screen !== "intro") return;
+    if (screen !== "intro" || window.innerWidth < 768) return;
     const root = introRootRef.current;
     const group = contentGroupRef.current;
     const cta = ctaRef.current;
@@ -618,7 +619,8 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? `flex min-h-0 flex-col flex-1 justify-center pt-[120px] md:justify-center md:pt-0`
+                  ? // ? `flex min-h-0 flex-col flex-1 justify-center pt-[120px] md:justify-center md:pt-0`
+                    `flex min-h-0 flex-col flex-1 justify-start pt-[120px] md:justify-center md:pt-0`
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
@@ -966,22 +968,13 @@ export default function OnboardingFlow({
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
                     data-intro-image-frame
-                    className={
-                      "mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"
-                    }
+                    className="mb-4 flex h-[258px] w-full flex-none items-center justify-center md:hidden"
                   >
                     <img
                       data-intro-illustration
                       src={slideIllustration}
                       alt=""
-                      className="h-full w-full max-w-full object-contain object-center"
-                      style={
-                        slideIndex === 1
-                          ? { transform: "translateY(-90px)" }
-                          : slideIndex === 2
-                            ? { transform: "translateY(-96px)" }
-                            : undefined
-                      }
+                      className="block h-full w-full object-contain object-center"
                     />
                   </div>
                   <div
