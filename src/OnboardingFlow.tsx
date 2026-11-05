@@ -986,16 +986,10 @@ export default function OnboardingFlow({
                   <div
                     ref={contentGroupRef}
                     data-intro-content
-                    className={`flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
-                      slideIndex === 2
-                        ? "-translate-y-[33px] md:translate-y-0"
-                        : ""
-                    }`}
+                    className="flex flex-none flex-col pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left"
                   >
-                    <div
-                      className={`flex flex-none flex-col items-center md:h-[172px] md:items-start "h-auto justify-start gap-2 md:justify-center"`}
-                    >
-                      <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:text-4xl md:mt-8">
+                    <div className="flex h-[160px] flex-none flex-col items-center justify-start gap-2 md:h-[172px] md:items-start md:justify-center">
+                      <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:mt-8 md:text-4xl">
                         {slide.title}
                       </h1>
                       <p className="max-w-lg text-base leading-7 text-muted-foreground">
