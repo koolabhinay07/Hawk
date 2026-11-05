@@ -978,7 +978,7 @@ export default function OnboardingFlow({
                         slideIndex === 0
                           ? "block h-full w-full object-contain object-center"
                           : slideIndex === 1
-                            ? "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[40px] object-contain object-center"
+                            ? "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[20px] object-contain object-center"
                             : "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[20px] object-contain object-center"
                       }
                     />
