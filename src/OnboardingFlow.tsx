@@ -515,7 +515,7 @@ export default function OnboardingFlow({
       ref={introRootRef}
       className={
         isIntro
-          ? "relative min-h-svh bg-background text-foreground md:flex md:h-dvh md:min-h-dvh md:items-center md:justify-center md:bg-[#f7f8f3]"
+          ? "relative min-h-dvh bg-background text-foreground md:flex md:h-dvh md:min-h-dvh md:items-center md:justify-center md:bg-[#f7f8f3]"
           : "grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"
       }
     >
@@ -557,12 +557,12 @@ export default function OnboardingFlow({
         <section
           className={
             isIntro
-              ? "flex min-h-svh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible"
+              ? "flex min-h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible"
               : "flex min-h-0 min-w-0 flex-col lg:max-h-dvh lg:overflow-y-auto"
           }
         >
           <div
-            className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-svh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}
+            className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-dvh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}
           >
             <div
               className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden md:flex" : ""}`}
@@ -618,7 +618,7 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? `flex min-h-0 flex-col flex-1 justify-center pt-0 md:justify-center md:pt-0`
+                  ? `flex min-h-0 flex-col flex-1 justify-center pt-[120px] md:justify-center md:pt-0`
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
@@ -966,13 +966,22 @@ export default function OnboardingFlow({
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
                     data-intro-image-frame
-                    className="mb-4 flex h-[clamp(150px,28svh,258px)] w-full flex-none items-center justify-center md:hidden"
+                    className={
+                      "mb-4 flex aspect-[464/258] w-full flex-none items-start justify-center md:hidden"
+                    }
                   >
                     <img
                       data-intro-illustration
                       src={slideIllustration}
                       alt=""
-                      className="block h-full w-full max-w-full object-contain object-center"
+                      className="h-full w-full max-w-full object-contain object-center"
+                      style={
+                        slideIndex === 1
+                          ? { transform: "translateY(-90px)" }
+                          : slideIndex === 2
+                            ? { transform: "translateY(-96px)" }
+                            : undefined
+                      }
                     />
                   </div>
                   <div
