@@ -410,7 +410,8 @@ export default function OnboardingFlow({
   } | null>(null);
 
   useLayoutEffect(() => {
-    if (screen !== "intro" || window.innerWidth < 768) return;
+    if (screen !== "intro") return;
+    if (window.innerWidth >= 768) return;
     const root = introRootRef.current;
     const group = contentGroupRef.current;
     const cta = ctaRef.current;
