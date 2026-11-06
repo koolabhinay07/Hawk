@@ -186,7 +186,9 @@ function ShowcasePanel({
   const authIllustration =
     screen === "signup" ? signupIllustration : loginIllustration;
   return (
-    <aside className={`relative hidden min-h-dvh overflow-hidden lg:flex lg:flex-col lg:p-10 xl:p-14 ${isAuthScreen ? "bg-background text-foreground" : "justify-between bg-primary text-primary-foreground"}`}>
+    <aside
+      className={`relative hidden min-h-dvh overflow-hidden lg:flex lg:flex-col lg:p-10 xl:p-14 ${isAuthScreen ? "bg-background text-foreground" : "justify-between bg-primary text-primary-foreground"}`}
+    >
       {!isAuthScreen && <Brand />}
       {isAuthScreen ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
@@ -197,66 +199,71 @@ function ShowcasePanel({
             className="max-h-[min(68dvh,630px)] w-full max-w-[630px] object-contain"
           />
         </div>
-      ) : <div className="relative mx-auto w-full max-w-xl py-12">
-        {screen === "intro" ? (
-          <>
-            <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
-              {slide.eyebrow}
-            </p>
-            <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
-              A calmer day for every classroom.
-            </h2>
-            <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
-              Hawk brings the everyday work of teaching into one clear,
-              welcoming space.
-            </p>
-            <div className="mt-9 flex max-w-lg flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-primary-foreground/90">
-              {slide.points.map((point) => (
-                <span key={point}>{point}</span>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
-              Your teaching day, in one place
-            </p>
-            <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
-              Make room for what matters.
-            </h2>
-            <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
-              Sign in to pick up where your school day begins.
-            </p>
-            <div className="mt-10 max-w-lg rounded-[28px] bg-primary-foreground/10 p-6 ring-1 ring-primary-foreground/15">
-              <div className="flex items-center justify-between border-b border-primary-foreground/15 pb-4">
-                <span className="text-sm font-semibold">Today at a glance</span>
-                <span className="rounded-full bg-primary-container px-3 py-1 text-xs font-bold text-on-primary-container">
-                  Your school
-                </span>
+      ) : (
+        <div className="relative mx-auto w-full max-w-xl py-12">
+          {screen === "intro" ? (
+            <>
+              <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
+                {slide.eyebrow}
+              </p>
+              <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
+                A calmer day for every classroom.
+              </h2>
+              <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
+                Hawk brings the everyday work of teaching into one clear,
+                welcoming space.
+              </p>
+              <div className="mt-9 flex max-w-lg flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-primary-foreground/90">
+                {slide.points.map((point) => (
+                  <span key={point}>{point}</span>
+                ))}
               </div>
-              <div className="mt-5 flex items-center gap-4">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
-                  <BookOpen className="size-6" />
-                </span>
-                <div>
-                  <p className="font-semibold">Classes and attendance</p>
-                  <p className="mt-1 text-sm text-primary-foreground/70">
-                    Ready when you are
-                  </p>
+            </>
+          ) : (
+            <>
+              <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
+                Your teaching day, in one place
+              </p>
+              <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
+                Make room for what matters.
+              </h2>
+              <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
+                Sign in to pick up where your school day begins.
+              </p>
+              <div className="mt-10 max-w-lg rounded-[28px] bg-primary-foreground/10 p-6 ring-1 ring-primary-foreground/15">
+                <div className="flex items-center justify-between border-b border-primary-foreground/15 pb-4">
+                  <span className="text-sm font-semibold">
+                    Today at a glance
+                  </span>
+                  <span className="rounded-full bg-primary-container px-3 py-1 text-xs font-bold text-on-primary-container">
+                    Your school
+                  </span>
                 </div>
-                <ArrowRight
-                  aria-hidden="true"
-                  className="ml-auto size-5 text-primary-container"
-                />
+                <div className="mt-5 flex items-center gap-4">
+                  <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
+                    <BookOpen className="size-6" />
+                  </span>
+                  <div>
+                    <p className="font-semibold">Classes and attendance</p>
+                    <p className="mt-1 text-sm text-primary-foreground/70">
+                      Ready when you are
+                    </p>
+                  </div>
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="ml-auto size-5 text-primary-container"
+                  />
+                </div>
               </div>
-            </div>
-          </>
-        )}
-      </div>
-      }
-      {!isAuthScreen && <p className="relative text-sm text-primary-foreground/65">
-        A shared workspace for better school days.
-      </p>}
+            </>
+          )}
+        </div>
+      )}
+      {!isAuthScreen && (
+        <p className="relative text-sm text-primary-foreground/65">
+          A shared workspace for better school days.
+        </p>
+      )}
     </aside>
   );
 }
@@ -292,12 +299,14 @@ export default function OnboardingFlow({
   }, []);
 
   useEffect(() => {
-    [...onboardingIllustrations, loginIllustration, signupIllustration].forEach((src) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.src = src;
-      void image.decode().catch(() => {});
-    });
+    [...onboardingIllustrations, loginIllustration, signupIllustration].forEach(
+      (src) => {
+        const image = new Image();
+        image.decoding = "async";
+        image.src = src;
+        void image.decode().catch(() => {});
+      },
+    );
   }, []);
 
   function go(next: FlowScreen) {
@@ -401,7 +410,6 @@ export default function OnboardingFlow({
   } | null>(null);
 
   useLayoutEffect(() => {
-    // if (screen !== "intro") return;
     if (screen !== "intro" || window.innerWidth < 768) return;
     const root = introRootRef.current;
     const group = contentGroupRef.current;
@@ -518,6 +526,95 @@ export default function OnboardingFlow({
       active = false;
       observer.disconnect();
       slideTwoImage?.removeEventListener("load", align);
+      window.removeEventListener("resize", align);
+      group.style.removeProperty("transform");
+    };
+  }, [screen, slideIndex]);
+
+  useLayoutEffect(() => {
+    if (screen !== "intro" || window.innerWidth >= 768) return;
+
+    const root = introRootRef.current;
+    const group = contentGroupRef.current;
+    const cta = ctaRef.current;
+
+    if (!root || !group || !cta) return;
+
+    const align = () => {
+      // Preserve the current layout on Slide 1.
+      if (slideIndex === 0) {
+        group.style.removeProperty("transform");
+        return;
+      }
+
+      // Measure Slide 1 at this device's actual viewport width.
+      const reference = root.cloneNode(true) as HTMLElement;
+
+      reference.setAttribute("aria-hidden", "true");
+      reference.inert = true;
+
+      reference.style.cssText = `
+      position: fixed;
+      left: -20000px;
+      top: 0;
+      width: ${root.getBoundingClientRect().width}px;
+      visibility: hidden;
+      pointer-events: none;
+    `;
+
+      const referenceGroup = reference.querySelector<HTMLElement>(
+        "[data-intro-content]",
+      );
+
+      const referenceImage = reference.querySelector<HTMLImageElement>(
+        "[data-intro-image-frame] img",
+      );
+
+      if (!referenceGroup) return;
+
+      referenceGroup.style.transform = "none";
+      referenceGroup.querySelector("h1")!.textContent = slides[0].title;
+      referenceGroup.querySelector("p")!.textContent = slides[0].body;
+
+      if (referenceImage) {
+        referenceImage.src = onboardingSlideOne;
+        referenceImage.className =
+          "block h-full w-full object-contain object-center";
+      }
+
+      document.body.appendChild(reference);
+
+      const referenceCTA =
+        reference.querySelector<HTMLElement>("[data-intro-ctas]");
+
+      if (!referenceCTA) {
+        reference.remove();
+        return;
+      }
+
+      const targetTop = referenceCTA.getBoundingClientRect().top;
+
+      reference.remove();
+
+      // Account for the existing CSS translation before measuring.
+      group.style.transform = "none";
+
+      const currentTop = cta.getBoundingClientRect().top;
+      const delta = targetTop - currentTop;
+
+      group.style.transform = `translateY(${delta}px)`;
+    };
+
+    align();
+
+    const observer = new ResizeObserver(align);
+    observer.observe(root);
+
+    window.addEventListener("resize", align);
+    document.fonts.ready.then(align);
+
+    return () => {
+      observer.disconnect();
       window.removeEventListener("resize", align);
       group.style.removeProperty("transform");
     };
