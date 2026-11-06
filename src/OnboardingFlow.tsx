@@ -1040,7 +1040,7 @@ export default function OnboardingFlow({
                   <div
                     ref={contentGroupRef}
                     data-intro-content
-                    className={`flex h-[0px] flex-none flex-col justify-start pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
+                    className={`flex h-[320px] flex-none flex-col justify-start pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
                       slideIndex === 2
                         ? "-translate-y-[33px] md:translate-y-0"
                         : ""
