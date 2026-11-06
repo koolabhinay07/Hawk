@@ -1022,7 +1022,7 @@ export default function OnboardingFlow({
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
                   <div
                     data-intro-image-frame
-                    className="mb-4 flex h-[clamp(180px,36svh,258px)] w-full flex-none items-center justify-center md:h-[258px] md:hidden"
+                    className="mb-4 flex h-[258px] w-full flex-none items-center justify-center md:hidden"
                   >
                     <img
                       data-intro-illustration
@@ -1032,8 +1032,8 @@ export default function OnboardingFlow({
                         slideIndex === 0
                           ? "block h-full w-full object-contain object-center"
                           : slideIndex === 1
-                            ? "block h-[clamp(180px,36svh,258px)] w-[clamp(180px,36svh,258px)] max-w-full shrink-0 -translate-y-[0px] object-contain object-center md:h-[320px] md:w-[320px]"
-                            : "block h-[clamp(180px,36svh,258px)] w-[clamp(180px,36svh,258px)] max-w-full shrink-0 -translate-y-[20px] object-contain object-center md:h-[320px] md:w-[320px]"
+                            ? "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[0px] object-contain object-center"
+                            : "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[20px] object-contain object-center"
                       }
                     />
                   </div>
