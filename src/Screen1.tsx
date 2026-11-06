@@ -800,7 +800,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <button
                 aria-label="Notifications"
                 type="button"
-                className="rounded-xl flex relative justify-center items-center size-11 hover:bg-card transition-colors"
+                className="rounded-xl md:rounded-[8px] flex relative justify-center items-center size-11 hover:bg-card transition-colors"
               >
                 <Bell className="size-5" />
                 <span className="rounded-full bg-primary-foreground absolute top-2 right-2.5 size-2" />
@@ -820,7 +820,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   type="button"
                   aria-current={activeNav === label ? "page" : undefined}
                   onClick={() => setActiveNav(label)}
-                  className={`flex min-h-[68px] w-[76px] flex-col items-center justify-center gap-1.5 whitespace-nowrap rounded-[20px] text-sm font-normal transition-colors ${activeNav === label ? "bg-primary-soft text-icon-accent" : "text-muted-foreground hover:bg-muted"}`}
+                  className={`flex min-h-[68px] w-[76px] flex-col items-center justify-center gap-1.5 whitespace-nowrap rounded-[20px] md:rounded-[8px] text-sm font-normal transition-colors ${activeNav === label ? "bg-primary-soft text-icon-accent" : "text-muted-foreground hover:bg-muted"}`}
                 >
                   <Icon aria-hidden="true" className="size-6" />
                   {label}
@@ -968,7 +968,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     <button
                       type="button"
                       onClick={() => document.getElementById("today-classes")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                      className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full border border-border bg-muted px-5 text-sm font-medium text-foreground transition-colors hover:bg-border"
+                      className="mt-5 flex min-h-12 w-full items-center justify-center rounded-[28px] md:rounded-[8px] border border-border bg-muted px-5 text-sm font-medium text-foreground transition-colors hover:bg-border"
                     >
                       View timetable
                     </button>
@@ -976,7 +976,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       <button
                         type="button"
                         onClick={() => openAttendance(attendanceSummary.retroactiveEligiblePeriods[0])}
-                        className="mt-3 flex min-h-11 w-full items-center justify-center rounded-full px-4 text-sm font-medium text-icon-accent hover:bg-primary-soft"
+                        className="mt-3 flex min-h-11 w-full items-center justify-center rounded-[24px] md:rounded-[8px] px-4 text-sm font-medium text-icon-accent hover:bg-primary-soft"
                       >
                         {attendanceSummary.eligibleForRetroactiveMarkingCount} {attendanceSummary.eligibleForRetroactiveMarkingCount === 1 ? "class needs" : "classes need"} attendance
                       </button>
@@ -991,7 +991,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => openAttendance(shownActivePeriod)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[28px] md:rounded-[8px] bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark Attendance
                   </button>
@@ -999,7 +999,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => setConductedPeriods((periods) => ({ ...periods, [shownActivePeriod.period]: Date.now() }))}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[28px] md:rounded-[8px] bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark as Conducted
                   </button>
@@ -1007,7 +1007,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => openAttendance(shownGracePeriodStatus.period)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[28px] md:rounded-[8px] bg-primary px-5 text-sm font-normal text-primary-foreground transition-colors hover:brightness-95"
                   >
                     Mark Attendance
                   </button>
@@ -1015,7 +1015,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => setConductedPeriods((periods) => ({ ...periods, [shownGracePeriodStatus.period.period]: Date.now() }))}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#d6ae3b] bg-[#fff8e1] px-5 text-base font-semibold text-[#6b4f00] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[28px] md:rounded-[8px] border-2 border-[#d6ae3b] bg-[#fff8e1] px-5 text-base font-semibold text-[#6b4f00] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Mark class as conducted?
                   </button>
@@ -1024,7 +1024,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => cancelProxyRequest(cancelableProxyRequestPeriod)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[28px] md:rounded-[8px] border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Cancel Request for {cancelableProxyRequestPeriod.period}
                   </button>
@@ -1033,7 +1033,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={() => cancelSwapRequest(cancelableSwapRequest.id)}
-                    className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-[28px] md:rounded-[8px] border-2 border-[#B85C68] bg-[#ffa5ab] px-5 text-base font-semibold text-[#B85C68] transition-colors hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     Cancel Swap Request for {cancelableSwapRequest.period}
                   </button>
@@ -1104,8 +1104,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                           {incomingSwapRequest && (
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                               <span className="text-sm text-muted-foreground">Swap request from {incomingSwapRequest.requesterName}</span>
-                              <button type="button" onClick={() => respondToSwapRequest(incomingSwapRequest.id, true)} className="inline-flex min-h-9 items-center rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground">Accept</button>
-                              <button type="button" onClick={() => respondToSwapRequest(incomingSwapRequest.id, false)} className="inline-flex min-h-9 items-center rounded-full border border-border px-3 text-sm font-medium text-foreground hover:bg-muted">Decline</button>
+                              <button type="button" onClick={() => respondToSwapRequest(incomingSwapRequest.id, true)} className="inline-flex min-h-9 items-center rounded-full md:rounded-[8px] bg-primary px-3 text-sm font-medium text-primary-foreground">Accept</button>
+                              <button type="button" onClick={() => respondToSwapRequest(incomingSwapRequest.id, false)} className="inline-flex min-h-9 items-center rounded-full md:rounded-[8px] border border-border px-3 text-sm font-medium text-foreground hover:bg-muted">Decline</button>
                             </div>
                           )}
                           {canRequestSwap && (
@@ -1142,7 +1142,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     <button
                       key={label}
                       type="button"
-                      className="flex min-h-[92px] min-w-0 flex-col items-center justify-start gap-2.5 rounded-2xl px-0 py-1 text-sm font-normal text-foreground transition-colors hover:bg-primary-soft"
+                      className="flex min-h-[92px] min-w-0 flex-col items-center justify-start gap-2.5 rounded-2xl md:rounded-[8px] px-0 py-1 text-sm font-normal text-foreground transition-colors hover:bg-primary-soft"
                     >
                       <span className="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-primary-soft text-icon-accent">
                         <Icon aria-hidden="true" className="size-6" />
@@ -1156,7 +1156,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               <button
                 type="button"
                 data-ai-obstacle
-                className="text-left rounded-[24px] bg-card border flex p-5 items-center gap-3.5 hover:bg-muted transition-colors"
+                className="text-left rounded-[24px] md:rounded-[8px] bg-card border flex p-5 items-center gap-3.5 hover:bg-muted transition-colors"
               >
                 <Wallet className="text-icon-accent size-5" />
                 <div className="grow flex flex-col gap-1">
@@ -1255,7 +1255,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                       aria-describedby="dark-mode-description"
                       aria-checked={isDarkMode}
                       onClick={() => setIsDarkMode((enabled) => !enabled)}
-                      className="relative flex h-11 w-[52px] shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-offset-2"
+                      className="relative flex h-11 w-[52px] shrink-0 items-center justify-center rounded-full md:rounded-[8px] transition-colors focus-visible:outline-offset-2"
                     >
                       <span className={`h-6 w-11 rounded-full transition-colors ${isDarkMode ? "bg-primary-foreground" : "bg-muted"}`} />
                       <span className={`absolute left-1.5 top-1/2 size-[18px] -translate-y-1/2 rounded-full bg-white shadow-sm transition-transform ${isDarkMode ? "translate-x-5" : "translate-x-0"}`} />
@@ -1277,7 +1277,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                           aria-label="Developer mode and reset periods"
                           aria-checked={developerMode}
                           onClick={toggleDeveloperMode}
-                          className="relative flex h-11 w-[52px] shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-offset-2"
+                          className="relative flex h-11 w-[52px] shrink-0 items-center justify-center rounded-full md:rounded-[8px] transition-colors focus-visible:outline-offset-2"
                         >
                           <span className={`h-6 w-11 rounded-full transition-colors ${developerMode ? "bg-primary" : "bg-muted"}`} />
                           <span className={`absolute left-1.5 top-1/2 size-[18px] -translate-y-1/2 rounded-full bg-white shadow-sm transition-transform ${developerMode ? "translate-x-5" : "translate-x-0"}`} />
@@ -1289,7 +1289,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-5 text-sm font-normal text-foreground transition-colors hover:bg-muted"
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full md:rounded-[8px] border border-border bg-background px-5 text-sm font-normal text-foreground transition-colors hover:bg-muted"
                   >
                     <LogOut aria-hidden="true" className="size-4" />
                     Log out
@@ -1317,7 +1317,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                 type="button"
                 aria-current={activeNav === label ? "page" : undefined}
                 onClick={() => setActiveNav(label)}
-                className={`flex min-h-[64px] min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-full px-0 py-2 text-sm font-normal transition-colors duration-200 ${
+                className={`flex min-h-[64px] min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap rounded-full md:rounded-[8px] px-0 py-2 text-sm font-normal transition-colors duration-200 ${
                   activeNav === label
                     ? "bg-primary-soft text-icon-accent"
                     : "text-muted-foreground hover:bg-muted"
@@ -1348,8 +1348,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                 </label>
                 {swapDialogError && <p role="alert" className="text-sm text-destructive">{swapDialogError}</p>}
                 <div className="flex gap-2 pt-1">
-                  <button type="button" onClick={() => setSwapDialogTarget(null)} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
-                  <button type="submit" className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Send request</button>
+                  <button type="button" onClick={() => setSwapDialogTarget(null)} className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                  <button type="submit" className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] bg-primary text-sm font-normal text-primary-foreground">Send request</button>
                 </div>
               </form>
             )}
@@ -1380,8 +1380,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               </label>
               {developerPasswordError && <p role="alert" className="text-sm text-destructive">{developerPasswordError}</p>}
               <div className="flex gap-2 pt-1">
-                <button type="button" onClick={() => { setDeveloperPasswordOpen(false); setDeveloperPasswordError(""); setDeveloperPassword(""); }} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
-                <button type="submit" className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Continue</button>
+                <button type="button" onClick={() => { setDeveloperPasswordOpen(false); setDeveloperPasswordError(""); setDeveloperPassword(""); }} className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                <button type="submit" className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] bg-primary text-sm font-normal text-primary-foreground">Continue</button>
               </div>
             </form>
           </dialog>
@@ -1398,8 +1398,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                 <h2 id="reset-periods-title" className="text-base font-semibold">Reset today’s periods and clear today’s attendance data?</h2>
               </div>
               <div className="flex gap-2 pt-1">
-                <button type="button" onClick={() => setResetDialogOpen(false)} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
-                <button type="button" onClick={resetPeriods} className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Reset</button>
+                <button type="button" onClick={() => setResetDialogOpen(false)} className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                <button type="button" onClick={resetPeriods} className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] bg-primary text-sm font-normal text-primary-foreground">Reset</button>
               </div>
             </div>
           </dialog>
@@ -1447,8 +1447,8 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <input required type="number" min="0" max={attendanceTotal || undefined} step="1" value={attendancePresent} onChange={(event) => setAttendancePresent(event.target.value)} className="h-11 rounded-lg border border-border bg-background px-3" />
                 </label>
                 <div className="flex gap-2 pt-1">
-                  <button type="button" onClick={() => setAttendanceTarget(null)} className="min-h-11 flex-1 rounded-xl border border-border text-sm font-normal hover:bg-muted">Cancel</button>
-                  <button type="submit" className="min-h-11 flex-1 rounded-xl bg-primary text-sm font-normal text-primary-foreground">Save attendance</button>
+                  <button type="button" onClick={() => setAttendanceTarget(null)} className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] border border-border text-sm font-normal hover:bg-muted">Cancel</button>
+                  <button type="submit" className="min-h-11 flex-1 rounded-[22px] md:rounded-[8px] bg-primary text-sm font-normal text-primary-foreground">Save attendance</button>
                 </div>
               </form>
             )}
@@ -1468,7 +1468,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
               tabIndex={aiAtHomeEnd ? 0 : -1}
               type="button"
               onClick={() => setAiOpen(true)}
-              className="shadow-md rounded-full bg-primary text-primary-foreground flex justify-center items-center size-14"
+              className="shadow-md rounded-full md:rounded-[8px] bg-primary text-primary-foreground flex justify-center items-center size-14"
             >
               <Sparkles className="size-6" />
             </button>
@@ -1502,7 +1502,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
 
                 <button
                   type="button"
-                  className="rounded-full bg-primary text-primary-foreground flex mx-auto mt-4 flex-col justify-center items-center size-16"
+                  className="rounded-full md:rounded-[8px] bg-primary text-primary-foreground flex mx-auto mt-4 flex-col justify-center items-center size-16"
                 >
                   <Mic className="size-6" />
                 </button>
@@ -1516,7 +1516,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                   <button
                     type="button"
                     aria-label="Send message"
-                    className="rounded-lg bg-primary text-primary-foreground flex justify-center items-center size-11"
+                    className="rounded-lg md:rounded-[8px] bg-primary text-primary-foreground flex justify-center items-center size-11"
                   >
                     <Send className="size-4" />
                   </button>
@@ -1528,7 +1528,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     "Create homework for Class 8-B",
                     "Mark today's attendance",
                   ].map((s) => (
-                    <button key={s} type="button" className="rounded-full bg-muted text-sm px-3 py-2">
+                    <button key={s} type="button" className="rounded-full md:rounded-[8px] bg-muted text-sm px-3 py-2">
                       {s}
                     </button>
                   ))}
@@ -1541,12 +1541,12 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                     students arrive in house colours by 8:30 AM.
                   </p>
                   <div className="flex mt-3 gap-2">
-                    <button type="button" className="rounded-lg text-sm font-normal border px-3 py-2">
+                    <button type="button" className="rounded-lg md:rounded-[8px] text-sm font-normal border px-3 py-2">
                       Edit
                     </button>
                     <button
                       type="button"
-                      className="rounded-lg bg-primary text-primary-foreground text-sm font-normal px-3 py-2"
+                      className="rounded-lg md:rounded-[8px] bg-primary text-primary-foreground text-sm font-normal px-3 py-2"
                     >
                       Post to parents
                     </button>
@@ -1556,7 +1556,7 @@ export default function Screen1({ onLogout, teacherName }: { onLogout: () => voi
                 <button
                   type="button"
                   onClick={() => setAiOpen(false)}
-                  className="rounded-lg text-sm font-normal border mt-4 w-full h-11"
+                  className="rounded-lg md:rounded-[8px] text-sm font-normal border mt-4 w-full h-11"
                 >
                   Close
                 </button>
