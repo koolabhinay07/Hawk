@@ -1020,27 +1020,95 @@ export default function OnboardingFlow({
               )}
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-                  <div
-                    data-intro-image-frame
-                    className="mb-4 flex h-[258px] w-full flex-none items-center justify-center md:hidden"
-                  >
-                    <img
-                      data-intro-illustration
-                      src={slideIllustration}
-                      alt=""
-                      className={
-                        slideIndex === 0
-                          ? "block h-full w-full object-contain object-center"
-                          : slideIndex === 1
-                            ? "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[0px] object-contain object-center"
-                            : "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[20px] object-contain object-center"
-                      }
-                    />
+                  <div className="grid min-h-[calc(100svh-7rem)] grid-rows-[minmax(0,1fr)_auto] md:hidden">
+                    <div
+                      data-intro-image-frame
+                      className="flex min-h-0 items-center justify-center"
+                    >
+                      <img
+                        data-intro-illustration
+                        src={slideIllustration}
+                        alt=""
+                        className="h-full max-h-[38svh] w-full object-contain object-center"
+                      />
+                    </div>
+
+                    <div
+                      className="flex flex-col text-center"
+                    >
+                      <div className="flex min-h-[7.5rem] flex-col items-center justify-center gap-2">
+                        <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight">
+                          {slide.title}
+                        </h1>
+                        <p className="max-w-lg text-base leading-7 text-muted-foreground">
+                          {slide.body}
+                        </p>
+                      </div>
+
+                      <div
+                        className="flex h-8 flex-none items-center justify-center gap-2.5"
+                        role="group"
+                        aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
+                      >
+                        {slides.map((item, index) => (
+                          <span
+                            key={item.title}
+                            className={`h-[6px] rounded-full transition-all ${
+                              index === slideIndex
+                                ? "w-5 bg-primary"
+                                : "w-[6px] bg-muted-foreground/50"
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {isFirstIntroSlide || slideIndex === 1 ? (
+                        <div className="mt-3 flex flex-col gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSlideIndex((index) =>
+                                Math.min(index + 1, slides.length - 1),
+                              )
+                            }
+                            className={`${introFilledButton} w-full`}
+                          >
+                            Next
+                            <ArrowRight className="size-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={goLogin}
+                            className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          >
+                            Skip
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex flex-col gap-3">
+                          <button
+                            type="button"
+                            onClick={() => go("login")}
+                            className={`${introFilledButton} w-full`}
+                          >
+                            Log in
+                            <ArrowRight className="size-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => go("signup")}
+                            className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+                          >
+                            Sign up
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div
                     ref={contentGroupRef}
                     data-intro-content
-                    className={`flex h-[320px] flex-none flex-col justify-start pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
+                    className={`hidden md:flex h-[320px] flex-none flex-col justify-start pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
                       slideIndex === 2
                         ? "-translate-y-[33px] md:translate-y-0"
                         : ""
