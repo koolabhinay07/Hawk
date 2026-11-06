@@ -1,8 +1,8 @@
 import {
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type FormEvent,
 } from "react";
 import appleIcon from "./assets/apple-icon.svg";
@@ -75,6 +75,10 @@ const slides = [
     ],
   },
 ];
+
+// Scales a design value (in px, measured on the moto edge 50 pro, 433px wide)
+// with the screen width. --u is set on <main>.
+const u = (n: number) => `calc(${n} * var(--u))`;
 
 const passwordRules = [
   {
@@ -391,148 +395,57 @@ export default function OnboardingFlow({
   const introFilledButton = filledButton.replaceAll("60px", "56px");
   const outlinedButton =
     "inline-flex h-[60px] min-h-[60px] shrink-0 items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2";
-  const introRootRef = useRef<HTMLElement>(null);
-  const contentGroupRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
-  const baselineRef = useRef<{
-    width: number;
-    height: number;
-    top: number;
-  } | null>(null);
-
-  useLayoutEffect(() => {
-    // if (screen !== "intro") return;
-    if (screen !== "intro" || window.innerWidth < 768) return;
-    const root = introRootRef.current;
-    const group = contentGroupRef.current;
-    const cta = ctaRef.current;
-    if (!root || !group || !cta) return;
-
-    let active = true;
-    const align = () => {
-      if (!active) return;
-      const rootRect = root.getBoundingClientRect();
-      if (slideIndex === 1 && window.innerWidth < 768) {
-        // Measure a hidden Slide 1 at this width, independent of Slide 2's taller SVG.
-        const reference = root.cloneNode(true) as HTMLElement;
-        reference.setAttribute("aria-hidden", "true");
-        reference.inert = true;
-        reference.style.cssText = `position:fixed;left:-20000px;top:0;width:${rootRect.width}px;visibility:hidden;pointer-events:none;`;
-        reference
-          .querySelectorAll<HTMLImageElement>("[data-intro-illustration]")
-          .forEach((img) => {
-            img.src = onboardingSlideOne;
-            img.width = 464;
-            img.height = 258;
-            img.style.aspectRatio = "464 / 258";
-            img.style.transform = "none";
-          });
-        const frame = reference.querySelector<HTMLElement>(
-          "[data-intro-image-frame]",
-        );
-        if (frame) frame.style.translate = "none";
-        const referenceGroup = reference.querySelector<HTMLElement>(
-          "[data-intro-content]",
-        )!;
-        referenceGroup.style.transform = "none";
-        referenceGroup.querySelector("h1")!.textContent = slides[0].title;
-        referenceGroup.querySelector("p")!.textContent = slides[0].body;
-        document.body.append(reference);
-        const targetTop =
-          reference.querySelector("[data-intro-ctas]")!.getBoundingClientRect()
-            .top - reference.getBoundingClientRect().top;
-        reference.remove();
-        group.style.transform = "none";
-        const currentTop = cta.getBoundingClientRect().top - rootRect.top;
-        group.style.transform = `translateY(${targetTop - currentTop}px)`;
-        return;
-      }
-      if (slideIndex === 0) {
-        baselineRef.current = {
-          width: window.innerWidth,
-          height: window.innerHeight,
-          top: cta.getBoundingClientRect().top - rootRect.top,
-        };
-        return;
-      }
-
-      let baseline = baselineRef.current;
-      if (
-        !baseline ||
-        baseline.width !== window.innerWidth ||
-        baseline.height !== window.innerHeight
-      ) {
-        // Measure the original slide at the current viewport without changing the visible slide.
-        const reference = root.cloneNode(true) as HTMLElement;
-        reference.setAttribute("aria-hidden", "true");
-        reference.style.cssText = `position:fixed;left:-20000px;top:0;width:${rootRect.width}px;visibility:hidden;pointer-events:none;`;
-        reference
-          .querySelectorAll<HTMLImageElement>("[data-intro-illustration]")
-          .forEach((img) => {
-            img.src = onboardingSlideOne;
-          });
-        const referenceImage = reference.querySelector<HTMLElement>(
-          "[data-intro-image-frame]",
-        );
-        if (referenceImage) referenceImage.style.translate = "none";
-        const referenceGroup = reference.querySelector<HTMLElement>(
-          "[data-intro-content]",
-        )!;
-        referenceGroup.style.transform = "none";
-        referenceGroup.querySelector("h1")!.textContent = slides[0].title;
-        referenceGroup.querySelector("p")!.textContent = slides[0].body;
-        document.body.append(reference);
-        baseline = {
-          width: window.innerWidth,
-          height: window.innerHeight,
-          top:
-            reference
-              .querySelector("[data-intro-ctas]")!
-              .getBoundingClientRect().top -
-            reference.getBoundingClientRect().top,
-        };
-        reference.remove();
-        baselineRef.current = baseline;
-      }
-      // Translate the complete content group; its internal layout and SVG sibling stay intact.
-      group.style.transform = "none";
-      const delta =
-        baseline.top - (cta.getBoundingClientRect().top - rootRect.top);
-      group.style.transform = `translateY(${delta}px)`;
-    };
-
-    align();
-    const observer = new ResizeObserver(align);
-    observer.observe(root);
-    observer.observe(group);
-    const slideTwoFrame =
-      slideIndex === 1
-        ? root.querySelector<HTMLElement>("[data-intro-image-frame]")
-        : null;
-    const slideTwoImage = slideTwoFrame?.querySelector("img");
-    if (slideTwoFrame) observer.observe(slideTwoFrame);
-    slideTwoImage?.addEventListener("load", align);
-    window.addEventListener("resize", align);
-    document.fonts.ready.then(align);
-    return () => {
-      active = false;
-      observer.disconnect();
-      slideTwoImage?.removeEventListener("load", align);
-      window.removeEventListener("resize", align);
-      group.style.removeProperty("transform");
-    };
-  }, [screen, slideIndex]);
 
   const isIntro = screen === "intro";
   const isFirstIntroSlide = isIntro && slideIndex === 0;
   const showLoginHeader = screen === "login" || screen === "signup";
 
+  const renderIntroCtas = (mobile: boolean) => {
+    const sizeStyle: CSSProperties | undefined = mobile
+      ? { height: u(56), minHeight: u(56) }
+      : undefined;
+    const hasNext = isFirstIntroSlide || slideIndex === 1;
+    return (
+      <div
+        className={mobile ? "flex flex-col" : "mt-5 flex flex-col gap-3"}
+        style={mobile ? { marginTop: u(12), gap: u(12) } : undefined}
+      >
+        <button
+          type="button"
+          onClick={
+            hasNext
+              ? () =>
+                  setSlideIndex((index) =>
+                    Math.min(index + 1, slides.length - 1),
+                  )
+              : () => go("login")
+          }
+          className={`${introFilledButton} w-full`}
+          style={sizeStyle}
+        >
+          {hasNext ? "Next" : "Log in"}
+          <ArrowRight className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={hasNext ? goLogin : () => go("signup")}
+          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
+          style={sizeStyle}
+        >
+          {hasNext ? "Skip" : "Sign up"}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <main
-      ref={introRootRef}
+      style={
+        { "--u": "calc(min(100vw, 480px) / 433)" } as CSSProperties
+      }
       className={
         isIntro
-          ? "relative min-h-dvh bg-background text-foreground md:flex md:h-dvh md:min-h-dvh md:items-center md:justify-center md:bg-[#f7f8f3]"
+          ? "relative h-dvh overflow-hidden bg-background text-foreground md:flex md:min-h-dvh md:items-center md:justify-center md:overflow-visible md:bg-[#f7f8f3]"
           : "relative grid min-h-dvh bg-background text-foreground lg:min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"
       }
     >
@@ -591,7 +504,6 @@ export default function OnboardingFlow({
         >
           {isIntro ? (
             <img
-              data-intro-illustration
               src={slideIllustration}
               alt=""
               className="h-full max-h-[520px] w-auto max-w-full object-contain"
@@ -603,12 +515,12 @@ export default function OnboardingFlow({
         <section
           className={
             isIntro
-              ? "flex min-h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible"
+              ? "flex h-dvh min-w-0 flex-col md:h-full md:min-h-0 md:w-full md:justify-center md:overflow-visible"
               : "flex min-h-0 min-w-0 flex-col lg:h-dvh lg:max-h-dvh lg:overflow-y-auto"
           }
         >
           <div
-            className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-dvh max-w-[560px] px-6 py-6 sm:px-6 md:min-h-0 md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:h-full lg:grow lg:justify-center lg:px-6 lg:pt-24 lg:pb-10" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}
+            className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-0 max-w-[560px] px-[calc(24*var(--u))] py-[calc(24*var(--u))] md:h-auto md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:h-full lg:grow lg:justify-center lg:px-6 lg:pt-24 lg:pb-10" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}
           >
             <div
               className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden md:flex lg:hidden" : ""}`}
@@ -664,8 +576,7 @@ export default function OnboardingFlow({
             <div
               className={
                 isIntro
-                  ? // ? `flex min-h-0 flex-col flex-1 justify-center pt-[120px] md:justify-center md:pt-0`
-                    `flex min-h-0 flex-col flex-1 justify-start pt-[120px] md:justify-center md:pt-0`
+                  ? "flex min-h-0 flex-1 flex-col md:justify-center"
                   : showLoginHeader
                     ? "mt-0 py-0 md:my-auto md:block md:flex-none md:py-10"
                     : "my-auto py-10 md:my-0 md:py-0"
@@ -1011,34 +922,91 @@ export default function OnboardingFlow({
               )}
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-                  <div
-                    data-intro-image-frame
-                    className="mb-4 flex h-[258px] w-full flex-none items-center justify-center md:hidden"
-                  >
-                    <img
-                      data-intro-illustration
-                      src={slideIllustration}
-                      alt=""
-                      className={
-                        slideIndex === 0
-                          ? "block h-full w-full object-contain object-center"
-                          : slideIndex === 1
-                            ? "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[0px] object-contain object-center"
-                            : "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[20px] object-contain object-center"
-                      }
+                  {/* ---------- MOBILE: fixed skeleton, identical on every slide ---------- */}
+                  <div className="flex min-h-0 flex-1 flex-col md:hidden">
+                    {/* illustration: takes whatever height is left, never moves the text */}
+                    <div
+                      className="flex min-h-0 flex-1 items-center justify-center"
+                      style={{ paddingTop: u(80) }}
+                    >
+                      <img
+                        src={slideIllustration}
+                        alt=""
+                        className={`block max-w-none shrink-0 object-contain object-center ${slideIndex === 0 ? "w-full" : "aspect-square"}`}
+                        style={{
+                          height: `min(${u(slideIndex === 0 ? 258 : 320)}, 100%)`,
+                          transform:
+                            slideIndex === 2
+                              ? `translateY(${u(-20)})`
+                              : undefined,
+                        }}
+                      />
+                    </div>
+
+                    {/* text + dots + buttons: every height is fixed */}
+                    <div
+                      className="relative flex-none text-center"
+                      style={{ marginTop: u(-24) }}
+                    >
+                      <div
+                        className="flex flex-col items-center justify-end"
+                        style={{ height: u(66) }}
+                      >
+                        <h1
+                          className="font-bold tracking-tight"
+                          style={{ fontSize: u(30), lineHeight: u(33) }}
+                        >
+                          {slide.title}
+                        </h1>
+                      </div>
+                      <p
+                        className="text-muted-foreground"
+                        style={{
+                          marginTop: u(8),
+                          height: u(56),
+                          fontSize: u(16),
+                          lineHeight: u(28),
+                        }}
+                      >
+                        {slide.body}
+                      </p>
+                      <div
+                        className="flex items-center justify-center"
+                        style={{
+                          height: u(22),
+                          paddingTop: u(16),
+                          gap: u(10),
+                        }}
+                        role="group"
+                        aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
+                      >
+                        {slides.map((item, index) => (
+                          <span
+                            key={item.title}
+                            className={`rounded-full transition-all ${index === slideIndex ? "bg-primary" : "bg-muted-foreground/50"}`}
+                            style={{
+                              height: u(6),
+                              width: index === slideIndex ? u(20) : u(6),
+                            }}
+                          />
+                        ))}
+                      </div>
+                      {renderIntroCtas(true)}
+                    </div>
+
+                    {/* empty space under the buttons (≈123 + 24 padding on the moto).
+                        It shrinks first on short screens. Set to 0 to pin the buttons lower. */}
+                    <div
+                      aria-hidden="true"
+                      className="min-h-0"
+                      style={{ flex: `0 1 ${u(123)}` }}
                     />
                   </div>
-                  <div
-                    ref={contentGroupRef}
-                    data-intro-content
-                    className={`flex h-[0px] flex-none flex-col justify-start pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
-                      slideIndex === 2
-                        ? "-translate-y-[33px] md:translate-y-0"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex flex-none flex-col items-center justify-start gap-2 md:h-[172px] md:items-start md:justify-center">
-                      <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight md:mt-8 md:text-4xl">
+
+                  {/* ---------- DESKTOP / TABLET (unchanged look) ---------- */}
+                  <div className="hidden h-[370px] flex-none flex-col justify-center text-left md:flex">
+                    <div className="flex h-[172px] flex-none flex-col items-start justify-center gap-2">
+                      <h1 className="mt-8 max-w-xl text-4xl font-bold leading-[1.1] tracking-tight">
                         {slide.title}
                       </h1>
                       <p className="max-w-lg text-base leading-7 text-muted-foreground">
@@ -1046,9 +1014,7 @@ export default function OnboardingFlow({
                       </p>
                     </div>
                     <div
-                      className={
-                        "h-[22px] flex flex-none items-center justify-center gap-2.5 pt-[16px] md:mt-1 md:h-[6px] md:justify-center md:pt-0"
-                      }
+                      className="mt-1 flex h-[6px] flex-none items-center justify-center gap-2.5"
                       role="group"
                       aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
                     >
@@ -1059,55 +1025,7 @@ export default function OnboardingFlow({
                         />
                       ))}
                     </div>
-                    {isFirstIntroSlide || slideIndex === 1 ? (
-                      <div
-                        ref={ctaRef}
-                        data-intro-ctas
-                        className={`mt-3 flex flex-col gap-3 md:mt-5`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSlideIndex((index) =>
-                              Math.min(index + 1, slides.length - 1),
-                            )
-                          }
-                          className={`${introFilledButton} w-full`}
-                        >
-                          Next
-                          <ArrowRight className="size-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={goLogin}
-                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
-                        >
-                          Skip
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        ref={ctaRef}
-                        data-intro-ctas
-                        className={`mt-3 flex flex-col gap-3 md:mt-5`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => go("login")}
-                          className={`${introFilledButton} w-full`}
-                        >
-                          Log in
-                          <ArrowRight className="size-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => go("signup")}
-                          className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
-                        >
-                          Sign up
-                        </button>
-                      </div>
-                    )}
+                    {renderIntroCtas(false)}
                   </div>
                 </div>
               )}
