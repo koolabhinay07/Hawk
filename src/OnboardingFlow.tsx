@@ -186,9 +186,7 @@ function ShowcasePanel({
   const authIllustration =
     screen === "signup" ? signupIllustration : loginIllustration;
   return (
-    <aside
-      className={`relative hidden min-h-dvh overflow-hidden lg:flex lg:flex-col lg:p-10 xl:p-14 ${isAuthScreen ? "bg-background text-foreground" : "justify-between bg-primary text-primary-foreground"}`}
-    >
+    <aside className={`relative hidden min-h-dvh overflow-hidden lg:flex lg:flex-col lg:p-10 xl:p-14 ${isAuthScreen ? "bg-background text-foreground" : "justify-between bg-primary text-primary-foreground"}`}>
       {!isAuthScreen && <Brand />}
       {isAuthScreen ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
@@ -199,71 +197,66 @@ function ShowcasePanel({
             className="max-h-[min(68dvh,630px)] w-full max-w-[630px] object-contain"
           />
         </div>
-      ) : (
-        <div className="relative mx-auto w-full max-w-xl py-12">
-          {screen === "intro" ? (
-            <>
-              <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
-                {slide.eyebrow}
-              </p>
-              <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
-                A calmer day for every classroom.
-              </h2>
-              <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
-                Hawk brings the everyday work of teaching into one clear,
-                welcoming space.
-              </p>
-              <div className="mt-9 flex max-w-lg flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-primary-foreground/90">
-                {slide.points.map((point) => (
-                  <span key={point}>{point}</span>
-                ))}
+      ) : <div className="relative mx-auto w-full max-w-xl py-12">
+        {screen === "intro" ? (
+          <>
+            <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
+              {slide.eyebrow}
+            </p>
+            <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
+              A calmer day for every classroom.
+            </h2>
+            <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
+              Hawk brings the everyday work of teaching into one clear,
+              welcoming space.
+            </p>
+            <div className="mt-9 flex max-w-lg flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-primary-foreground/90">
+              {slide.points.map((point) => (
+                <span key={point}>{point}</span>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
+              Your teaching day, in one place
+            </p>
+            <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
+              Make room for what matters.
+            </h2>
+            <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
+              Sign in to pick up where your school day begins.
+            </p>
+            <div className="mt-10 max-w-lg rounded-[28px] bg-primary-foreground/10 p-6 ring-1 ring-primary-foreground/15">
+              <div className="flex items-center justify-between border-b border-primary-foreground/15 pb-4">
+                <span className="text-sm font-semibold">Today at a glance</span>
+                <span className="rounded-full bg-primary-container px-3 py-1 text-xs font-bold text-on-primary-container">
+                  Your school
+                </span>
               </div>
-            </>
-          ) : (
-            <>
-              <p className="mb-3 text-sm font-semibold tracking-wide text-primary-container">
-                Your teaching day, in one place
-              </p>
-              <h2 className="max-w-lg text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
-                Make room for what matters.
-              </h2>
-              <p className="mt-5 max-w-md text-base leading-7 text-primary-foreground/80">
-                Sign in to pick up where your school day begins.
-              </p>
-              <div className="mt-10 max-w-lg rounded-[28px] bg-primary-foreground/10 p-6 ring-1 ring-primary-foreground/15">
-                <div className="flex items-center justify-between border-b border-primary-foreground/15 pb-4">
-                  <span className="text-sm font-semibold">
-                    Today at a glance
-                  </span>
-                  <span className="rounded-full bg-primary-container px-3 py-1 text-xs font-bold text-on-primary-container">
-                    Your school
-                  </span>
+              <div className="mt-5 flex items-center gap-4">
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
+                  <BookOpen className="size-6" />
+                </span>
+                <div>
+                  <p className="font-semibold">Classes and attendance</p>
+                  <p className="mt-1 text-sm text-primary-foreground/70">
+                    Ready when you are
+                  </p>
                 </div>
-                <div className="mt-5 flex items-center gap-4">
-                  <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
-                    <BookOpen className="size-6" />
-                  </span>
-                  <div>
-                    <p className="font-semibold">Classes and attendance</p>
-                    <p className="mt-1 text-sm text-primary-foreground/70">
-                      Ready when you are
-                    </p>
-                  </div>
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="ml-auto size-5 text-primary-container"
-                  />
-                </div>
+                <ArrowRight
+                  aria-hidden="true"
+                  className="ml-auto size-5 text-primary-container"
+                />
               </div>
-            </>
-          )}
-        </div>
-      )}
-      {!isAuthScreen && (
-        <p className="relative text-sm text-primary-foreground/65">
-          A shared workspace for better school days.
-        </p>
-      )}
+            </div>
+          </>
+        )}
+      </div>
+      }
+      {!isAuthScreen && <p className="relative text-sm text-primary-foreground/65">
+        A shared workspace for better school days.
+      </p>}
     </aside>
   );
 }
@@ -299,14 +292,12 @@ export default function OnboardingFlow({
   }, []);
 
   useEffect(() => {
-    [...onboardingIllustrations, loginIllustration, signupIllustration].forEach(
-      (src) => {
-        const image = new Image();
-        image.decoding = "async";
-        image.src = src;
-        void image.decode().catch(() => {});
-      },
-    );
+    [...onboardingIllustrations, loginIllustration, signupIllustration].forEach((src) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+      void image.decode().catch(() => {});
+    });
   }, []);
 
   function go(next: FlowScreen) {
@@ -1020,95 +1011,27 @@ export default function OnboardingFlow({
               )}
               {screen === "intro" && (
                 <div className="animate-[fade-in_260ms_ease-out] flex min-h-0 flex-1 flex-col md:justify-center">
-                  <div className="grid min-h-[calc(100svh-7rem)] grid-rows-[minmax(0,1fr)_auto] md:hidden">
-                    <div
-                      data-intro-image-frame
-                      className="flex min-h-0 items-center justify-center"
-                    >
-                      <img
-                        data-intro-illustration
-                        src={slideIllustration}
-                        alt=""
-                        className="h-full max-h-[38svh] w-full object-contain object-center"
-                      />
-                    </div>
-
-                    <div
-                      className="flex flex-col text-center"
-                    >
-                      <div className="flex min-h-[7.5rem] flex-col items-center justify-center gap-2">
-                        <h1 className="max-w-xl text-3xl font-bold leading-[1.1] tracking-tight">
-                          {slide.title}
-                        </h1>
-                        <p className="max-w-lg text-base leading-7 text-muted-foreground">
-                          {slide.body}
-                        </p>
-                      </div>
-
-                      <div
-                        className="flex h-8 flex-none items-center justify-center gap-2.5"
-                        role="group"
-                        aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
-                      >
-                        {slides.map((item, index) => (
-                          <span
-                            key={item.title}
-                            className={`h-[6px] rounded-full transition-all ${
-                              index === slideIndex
-                                ? "w-5 bg-primary"
-                                : "w-[6px] bg-muted-foreground/50"
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      {isFirstIntroSlide || slideIndex === 1 ? (
-                        <div className="mt-3 flex flex-col gap-3">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSlideIndex((index) =>
-                                Math.min(index + 1, slides.length - 1),
-                              )
-                            }
-                            className={`${introFilledButton} w-full`}
-                          >
-                            Next
-                            <ArrowRight className="size-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={goLogin}
-                            className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
-                          >
-                            Skip
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="mt-3 flex flex-col gap-3">
-                          <button
-                            type="button"
-                            onClick={() => go("login")}
-                            className={`${introFilledButton} w-full`}
-                          >
-                            Log in
-                            <ArrowRight className="size-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => go("signup")}
-                            className="inline-flex h-[56px] min-h-[56px] shrink-0 w-full items-center justify-center gap-2 rounded-[8px] border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-offset-2"
-                          >
-                            Sign up
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                  <div
+                    data-intro-image-frame
+                    className="mb-4 flex h-[258px] w-full flex-none items-center justify-center md:hidden"
+                  >
+                    <img
+                      data-intro-illustration
+                      src={slideIllustration}
+                      alt=""
+                      className={
+                        slideIndex === 0
+                          ? "block h-full w-full object-contain object-center"
+                          : slideIndex === 1
+                            ? "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[0px] object-contain object-center"
+                            : "block h-[320px] w-[320px] max-w-none shrink-0 -translate-y-[20px] object-contain object-center"
+                      }
+                    />
                   </div>
                   <div
                     ref={contentGroupRef}
                     data-intro-content
-                    className={`hidden md:flex h-[320px] flex-none flex-col justify-start pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
+                    className={`flex h-[0px] flex-none flex-col justify-start pb-2 text-center md:mt-0 md:h-[370px] md:justify-center md:pb-0 md:text-left ${
                       slideIndex === 2
                         ? "-translate-y-[33px] md:translate-y-0"
                         : ""
