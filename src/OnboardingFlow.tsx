@@ -549,43 +549,39 @@ export default function OnboardingFlow({
           : "relative grid min-h-dvh bg-background text-foreground lg:min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(470px,0.9fr)]"
       }
     >
-      {showLoginHeader && (
-        <div className="absolute inset-x-0 top-0 z-20 hidden items-center justify-between px-10 pt-10 lg:flex xl:px-14 xl:pt-14">
+      {(isIntro || showLoginHeader) && (
+        <div className={`absolute inset-x-0 top-0 hidden items-center justify-between px-10 pt-10 md:flex xl:px-14 xl:pt-14 ${isIntro ? "z-10" : "z-20"}`}>
           <Brand />
-          <div
-            className="flex items-center rounded-full bg-muted p-1"
-            role="tablist"
-            aria-label="Account access"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={screen === "login"}
-              onClick={() => go("login")}
-              className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
-            >
-              Log in
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={screen === "signup"}
-              onClick={() => go("signup")}
-              className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
-            >
-              Sign up
-            </button>
-          </div>
-        </div>
-      )}
-      {isIntro && (
-        <div className="absolute inset-x-0 top-0 z-10 hidden px-10 pt-10 md:block xl:px-14 xl:pt-14">
-          <div className="flex w-full items-center justify-between">
-            <Brand />
+          {isIntro ? (
             <span className="text-sm font-semibold text-muted-foreground">
               Teacher workspace
             </span>
-          </div>
+          ) : (
+            <div
+              className="flex items-center rounded-full bg-muted p-1"
+              role="tablist"
+              aria-label="Account access"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={screen === "login"}
+                onClick={() => go("login")}
+                className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+              >
+                Log in
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={screen === "signup"}
+                onClick={() => go("signup")}
+                className={`min-h-9 rounded-full px-4 text-sm font-medium transition-colors ${screen === "signup" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+              >
+                Sign up
+              </button>
+            </div>
+          )}
         </div>
       )}
       <div
@@ -623,7 +619,7 @@ export default function OnboardingFlow({
             className={`mx-auto flex w-full grow flex-col ${isIntro ? "min-h-0 max-w-[560px] px-[calc(24*var(--u))] py-[calc(24*var(--u))] md:h-auto md:grow-0 md:max-w-none md:px-0 md:py-6" : showLoginHeader ? "max-w-[560px] px-6 pt-12 pb-0 sm:px-6 md:grow-0 md:px-6 md:py-6 lg:h-full lg:grow lg:justify-center lg:px-6 lg:pt-24 lg:pb-10" : "max-w-[560px] px-5 py-6 sm:px-10 sm:py-9 md:grow-0 md:px-6 md:py-6 lg:px-6 lg:py-6"}`}
           >
             <div
-              className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden md:flex lg:hidden" : ""}`}
+              className={`flex items-center justify-between ${isIntro ? "md:hidden" : showLoginHeader ? "hidden" : ""}`}
             >
               <div className={isFirstIntroSlide ? "" : "lg:hidden"}>
                 <Brand />
