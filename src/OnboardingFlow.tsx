@@ -43,6 +43,38 @@ type FlowScreen =
   | "forgot-verify"
   | "reset";
 
+const flowScreens: FlowScreen[] = [
+  "intro",
+  "login",
+  "signup",
+  "email-verify",
+  "email-verified",
+  "invite",
+  "forgot",
+  "forgot-verify",
+  "reset",
+];
+
+function readSavedFlowPosition() {
+  try {
+    const saved = JSON.parse(
+      window.localStorage.getItem("hawk-onboarding-position") ?? "null",
+    ) as { screen?: unknown; slideIndex?: unknown } | null;
+    return {
+      screen:
+        saved && flowScreens.includes(saved.screen as FlowScreen)
+          ? (saved.screen as FlowScreen)
+          : "intro",
+      slideIndex:
+        saved && Number.isInteger(saved.slideIndex)
+          ? Math.max(0, Math.min(Number(saved.slideIndex), slides.length - 1))
+          : 0,
+    };
+  } catch {
+    return { screen: "intro" as FlowScreen, slideIndex: 0 };
+  }
+}
+
 const slides = [
   {
     eyebrow: "A better school day starts here",
@@ -270,8 +302,12 @@ export default function OnboardingFlow({
 }: {
   onComplete: (profile?: { fullName: string; email: string }) => void;
 }) {
-  const [screen, setScreen] = useState<FlowScreen>("intro");
-  const [slideIndex, setSlideIndex] = useState(0);
+  const [screen, setScreen] = useState<FlowScreen>(
+    () => readSavedFlowPosition().screen,
+  );
+  const [slideIndex, setSlideIndex] = useState(
+    () => readSavedFlowPosition().slideIndex,
+  );
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -283,6 +319,59 @@ export default function OnboardingFlow({
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    const initialPosition = { hawkOnboarding: true, screen, slideIndex };
+    if (window.history.state?.hawkOnboarding !== true) {
+      window.history.replaceState(
+        { hawkOnboarding: true, screen: "intro", slideIndex: 0 },
+        "",
+      );
+      for (let index = 1; index <= slideIndex; index += 1) {
+        window.history.pushState(
+          { hawkOnboarding: true, screen: "intro", slideIndex: index },
+          "",
+        );
+      }
+      if (screen !== "intro") {
+        window.history.pushState(initialPosition, "");
+      }
+    }
+
+    function restorePreviousPosition(event: PopStateEvent) {
+      const previous = event.state as
+        | { hawkOnboarding?: boolean; screen?: unknown; slideIndex?: unknown }
+        | null;
+      if (
+        !previous?.hawkOnboarding ||
+        !flowScreens.includes(previous.screen as FlowScreen)
+      ) {
+        return;
+      }
+      setScreen(previous.screen as FlowScreen);
+      setSlideIndex(
+        Number.isInteger(previous.slideIndex)
+          ? Math.max(0, Math.min(Number(previous.slideIndex), slides.length - 1))
+          : 0,
+      );
+      setError("");
+      setNotice("");
+    }
+
+    window.addEventListener("popstate", restorePreviousPosition);
+    return () => window.removeEventListener("popstate", restorePreviousPosition);
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        "hawk-onboarding-position",
+        JSON.stringify({ screen, slideIndex }),
+      );
+    } catch {
+      // Keep the current step for this session if storage is unavailable.
+    }
+  }, [screen, slideIndex]);
 
   useEffect(() => {
     try {
@@ -307,7 +396,20 @@ export default function OnboardingFlow({
   function go(next: FlowScreen) {
     setError("");
     setNotice("");
+    window.history.pushState(
+      { hawkOnboarding: true, screen: next, slideIndex },
+      "",
+    );
     setScreen(next);
+  }
+
+  function goToSlide(nextIndex: number) {
+    const boundedIndex = Math.max(0, Math.min(nextIndex, slides.length - 1));
+    window.history.pushState(
+      { hawkOnboarding: true, screen: "intro", slideIndex: boundedIndex },
+      "",
+    );
+    setSlideIndex(boundedIndex);
   }
 
   function goLogin() {
@@ -415,9 +517,7 @@ export default function OnboardingFlow({
           onClick={
             hasNext
               ? () =>
-                  setSlideIndex((index) =>
-                    Math.min(index + 1, slides.length - 1),
-                  )
+                  goToSlide(slideIndex + 1)
               : () => go("login")
           }
           className={`${introFilledButton} w-full`}
