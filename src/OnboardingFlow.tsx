@@ -26,6 +26,17 @@ import onboardingSlideThree from "./assets/onboarding-slide-3.svg";
 import loginIllustration from "./assets/login-illustration.svg";
 import signupIllustration from "./assets/signup-illustration.svg";
 
+const authIllustrationPreloads: HTMLImageElement[] = [];
+if (typeof window !== "undefined") {
+  [loginIllustration, signupIllustration].forEach((src) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.src = src;
+    void image.decode().catch(() => {});
+    authIllustrationPreloads.push(image);
+  });
+}
+
 const onboardingIllustrations = [
   onboardingSlideOne,
   onboardingSlideTwo,
@@ -219,18 +230,20 @@ function ShowcasePanel({
 }) {
   const slide = slides[slideIndex];
   const isAuthScreen = screen === "login" || screen === "signup";
-  const authIllustration =
-    screen === "signup" ? signupIllustration : loginIllustration;
   return (
     <aside className={`relative hidden min-h-dvh overflow-hidden lg:flex lg:flex-col lg:p-10 xl:p-14 ${isAuthScreen ? "bg-background text-foreground" : "justify-between bg-primary text-primary-foreground"}`}>
       {!isAuthScreen && <Brand />}
       {isAuthScreen ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <img
-            key={screen}
-            src={authIllustration}
+            src={loginIllustration}
             alt=""
-            className="max-h-[min(68dvh,630px)] w-full max-w-[630px] object-contain"
+            className={`max-h-[min(68dvh,630px)] w-full max-w-[630px] object-contain ${screen === "login" ? "" : "hidden"}`}
+          />
+          <img
+            src={signupIllustration}
+            alt=""
+            className={`max-h-[min(68dvh,630px)] w-full max-w-[630px] object-contain ${screen === "signup" ? "" : "hidden"}`}
           />
         </div>
       ) : <div className="relative mx-auto w-full max-w-xl py-12">
@@ -385,7 +398,7 @@ export default function OnboardingFlow({
   }, []);
 
   useEffect(() => {
-    [...onboardingIllustrations, loginIllustration, signupIllustration].forEach((src) => {
+    onboardingIllustrations.forEach((src) => {
       const image = new Image();
       image.decoding = "async";
       image.src = src;
