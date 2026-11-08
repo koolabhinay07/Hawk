@@ -550,7 +550,7 @@ export default function OnboardingFlow({
       }
     >
       {(isIntro || showLoginHeader) && (
-        <div className={`absolute inset-x-0 top-0 hidden items-center justify-between px-10 pt-10 md:flex xl:px-14 xl:pt-14 ${isIntro ? "z-10" : "z-20"}`}>
+        <div className={`absolute inset-x-0 top-0 hidden items-center justify-between px-10 pt-10 md:flex xl:px-14 xl:pt-14 ${isIntro ? "z-10" : "z-20 -translate-y-2"}`}>
           <Brand />
           {isIntro ? (
             <span className="text-sm font-semibold text-muted-foreground">
