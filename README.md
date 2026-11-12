@@ -73,3 +73,11 @@ export default defineConfig([
 ])
 
 ```
+
+## Authentication setup
+
+Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to the URL and publishable key of the isolated testing Supabase project. Restart Vite after changing these values. Do not use a service role or secret key in the browser.
+
+Configure the app origin as the Supabase Auth site URL or an allowed redirect URL. Email sign-up and password recovery use Supabase's confirmation links; enable and configure Apple and Google providers before using their buttons. The school invite screen is not connected to a school membership service and does not grant access.
+
+The workspace is a client-side application: its session gate controls what the UI displays, not access to backend data. Enforce authorization with Row Level Security and server-side checks for any real data. Existing demo timetable and attendance data are stored in browser local storage and are not isolated by account.

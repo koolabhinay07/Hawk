@@ -1,48 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import OnboardingFlow from "./OnboardingFlow";
 import Screen1 from "./Screen1";
-
-type TeacherProfile = { fullName: string; email: string };
+import { supabase } from "./supabase";
 
 export default function App() {
-  const [hasEnteredApp, setHasEnteredApp] = useState(() => {
-    try {
-      return window.localStorage.getItem("hawk-onboarding-complete") === "true";
-    } catch {
-      return false;
-    }
-  });
-  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile>(() => {
-    try {
-      const stored = JSON.parse(window.localStorage.getItem("hawk-teacher-profile") ?? "null") as Partial<TeacherProfile> | null;
-      if (stored && typeof stored.fullName === "string" && stored.fullName.trim()) {
-        return { fullName: stored.fullName, email: typeof stored.email === "string" ? stored.email : "" };
-      }
-    } catch {
-      // Use the demo teacher profile when no saved profile is available.
-    }
-    return { fullName: "Priya Sharma", email: "" };
-  });
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(!supabase);
+  const [recovering, setRecovering] = useState(false);
 
-  function completeOnboarding(profile?: TeacherProfile) {
-    try {
-      window.localStorage.setItem("hawk-onboarding-complete", "true");
-      if (profile) window.localStorage.setItem("hawk-teacher-profile", JSON.stringify(profile));
-    } catch {
-      // Continue to the teacher workspace for this session if storage is unavailable.
-    }
-    if (profile) setTeacherProfile(profile);
-    setHasEnteredApp(true);
-  }
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, next) => {
+      if (event === "PASSWORD_RECOVERY") setRecovering(true);
+      setSession(next);
+      setReady(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  function logout() {
-    try {
-      window.localStorage.removeItem("hawk-onboarding-complete");
-    } catch {
-      // Return to onboarding for this session if storage is unavailable.
-    }
-    setHasEnteredApp(false);
-  }
-
-  return hasEnteredApp ? <Screen1 onLogout={logout} teacherName={teacherProfile.fullName} /> : <OnboardingFlow onComplete={completeOnboarding} />;
+  if (!ready) return null;
+  if (!session || recovering) return <OnboardingFlow recovery={recovering} onRecoveryComplete={() => setRecovering(false)} />;
+  const name = typeof session.user.user_metadata.full_name === "string" ? session.user.user_metadata.full_name : session.user.email?.split("@")[0] || "Teacher";
+  return <Screen1 teacherName={name} onLogout={() => { void supabase?.auth.signOut(); }} />;
 }

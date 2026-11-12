@@ -1,10 +1,13 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
   type FormEvent,
 } from "react";
+
+import { supabase } from "./supabase";
 import appleIcon from "./assets/apple-icon.svg";
 import googleIcon from "./assets/google-icon.svg";
 import {
@@ -311,16 +314,17 @@ function ShowcasePanel({
 }
 
 export default function OnboardingFlow({
-  onComplete,
+  recovery, onRecoveryComplete,
 }: {
-  onComplete: (profile?: { fullName: string; email: string }) => void;
+  recovery: boolean; onRecoveryComplete: () => void;
 }) {
-  const [screen, setScreen] = useState<FlowScreen>(
-    () => readSavedFlowPosition().screen,
-  );
-  const [slideIndex, setSlideIndex] = useState(
-    () => readSavedFlowPosition().slideIndex,
-  );
+const [screen, setScreen] = useState<FlowScreen>(
+  () => readSavedFlowPosition().screen,
+);
+
+const [slideIndex, setSlideIndex] = useState(
+  () => readSavedFlowPosition().slideIndex,
+);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -426,76 +430,73 @@ export default function OnboardingFlow({
   }
 
   function goLogin() {
+    if (recovery) { void supabase?.auth.signOut(); onRecoveryComplete(); }
     setPassword("");
     setConfirmPassword("");
     setVerificationCode("");
     go("login");
   }
 
-  function submitLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    onComplete();
+  function client() {
+    if (!supabase) setError("Authentication is not configured. Contact your administrator.");
+    return supabase;
   }
 
-  function submitSignup(event: FormEvent<HTMLFormElement>) {
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!passwordRules.every((rule) => rule.test(password))) {
-      setError("Your password does not meet all the requirements yet.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Those passwords do not match. Please try again.");
-      return;
-    }
-    setEmailVerificationCode("");
-    go("email-verify");
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) setError(error.message);
+  }
+
+  async function signInWithProvider(provider: "google" | "apple") {
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } });
+    if (error) setError(error.message);
+  }
+
+  async function submitSignup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!passwordRules.every((rule) => rule.test(password))) { setError("Your password does not meet all the requirements yet."); return; }
+    if (password !== confirmPassword) { setError("Those passwords do not match. Please try again."); return; }
+    const auth = client(); if (!auth) return;
+    const { data, error } = await auth.auth.signUp({ email: email.trim(), password, options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin } });
+    if (error) { setError(error.message); return; }
+    if (!data.session) { goLogin(); setNotice("Check your email for a confirmation link, then log in."); }
   }
 
   function submitEmailVerification(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (emailVerificationCode.length !== 4) {
-      setError("Enter the 4-character email verification code.");
-      return;
-    }
-    go("email-verified");
+    setError("Use the confirmation link sent to your email.");
   }
 
   function submitInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (inviteCode.length !== 4) {
-      setError("Enter the 4-character code from your school administrator.");
-      return;
-    }
-    onComplete({ fullName: fullName.trim(), email: email.trim() });
+    setError("School invite verification is not configured yet.");
   }
 
-  function submitForgot(event: FormEvent<HTMLFormElement>) {
+  async function submitForgot(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setVerificationCode("");
-    go("forgot-verify");
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin });
+    if (error) { setError(error.message); return; }
+    setNotice("If an account exists, check your email for a password reset link.");
   }
 
   function submitVerification(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (verificationCode.length !== 4) {
-      setError("Enter the 4-character verification code.");
-      return;
-    }
-    setPassword("");
-    setConfirmPassword("");
-    go("reset");
+    setError("Use the password reset link sent to your email.");
   }
 
-  function submitReset(event: FormEvent<HTMLFormElement>) {
+  async function submitReset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (password.length < 8) {
-      setError("Use at least 8 characters for your new password.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Those passwords do not match. Please try again.");
-      return;
-    }
+    if (!passwordRules.every((rule) => rule.test(password))) { setError("Use at least 8 characters, a number, and upper and lower case letters."); return; }
+    if (password !== confirmPassword) { setError("Those passwords do not match. Please try again."); return; }
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.updateUser({ password });
+    if (error) { setError(error.message); return; }
+    await auth.auth.signOut();
+    onRecoveryComplete();
     goLogin();
     setNotice("Your password has been reset. You can now log in.");
   }
@@ -742,7 +743,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[8px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={appleIcon}
@@ -755,7 +756,7 @@ export default function OnboardingFlow({
                         <button
                           type="button"
                           onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[8px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={googleIcon}
@@ -1158,7 +1159,7 @@ export default function OnboardingFlow({
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <button
                       type="button"
-                      onClick={() => onComplete()}
+                      onClick={() => { void signInWithProvider("apple"); }}
                       className={outlinedButton}
                     >
                       <img
@@ -1171,7 +1172,7 @@ export default function OnboardingFlow({
                     </button>
                     <button
                       type="button"
-                      onClick={() => onComplete()}
+                      onClick={() => { void signInWithProvider("google"); }}
                       className={`${outlinedButton} w-full`}
                     >
                       <img
@@ -1598,6 +1599,7 @@ export default function OnboardingFlow({
                         {error}
                       </p>
                     )}
+                    {notice && <p role="status" className="text-sm text-icon-accent">{notice}</p>}
                     <button type="submit" className={`${filledButton} w-full`}>
                       Continue
                       <ArrowRight className="size-4" />
