@@ -150,7 +150,7 @@ const supportedEmailDomains = new Set([
   "proton.me",
   "protonmail.com",
   "rediffmail.com",
-  "zoho.com",
+  "zohomail.in",
 ]);
 
 function getSignupEmailStatus(email: string) {
