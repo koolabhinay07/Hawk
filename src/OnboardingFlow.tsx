@@ -337,6 +337,14 @@ const [slideIndex, setSlideIndex] = useState(
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const handleGoogleLogin = async () => {
+    await signInWithProvider("google");
+  };
+
+  const handleAppleLogin = async () => {
+    await signInWithProvider("apple");
+  };
+
   useEffect(() => {
     const initialPosition = { hawkOnboarding: true, screen, slideIndex };
     if (window.history.state?.hawkOnboarding !== true) {
@@ -742,7 +750,7 @@ const [slideIndex, setSlideIndex] = useState(
                       <div className="grid gap-3">
                         <button
                           type="button"
-                          onClick={() => onComplete()}
+                          onClick={handleAppleLogin}
                           className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
@@ -755,7 +763,7 @@ const [slideIndex, setSlideIndex] = useState(
                         </button>
                         <button
                           type="button"
-                          onClick={() => onComplete()}
+                          onClick={handleGoogleLogin}
                           className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
