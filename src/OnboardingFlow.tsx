@@ -21,6 +21,7 @@ import {
   Mail,
   ShieldCheck,
   UserRound,
+  X,
 } from "lucide-react";
 import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
 import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
@@ -136,6 +137,31 @@ const passwordRules = [
     test: (value: string) => /[a-z]/.test(value) && /[A-Z]/.test(value),
   },
 ];
+
+const supportedEmailDomains = new Set([
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "icloud.com",
+  "me.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+  "rediffmail.com",
+  "zoho.com",
+]);
+
+function getSignupEmailStatus(email: string) {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return "empty" as const;
+
+  const match = normalized.match(/^[^\s@]+@([^\s@]+)$/);
+  return match && supportedEmailDomains.has(match[1])
+    ? ("valid" as const)
+    : ("invalid" as const);
+}
 
 function OtpFields({
   value,
@@ -335,6 +361,7 @@ const [slideIndex, setSlideIndex] = useState(
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const signupEmailStatus = getSignupEmailStatus(email);
 
   const handleGoogleLogin = async () => {
     await signInWithProvider("google");
@@ -464,6 +491,10 @@ const [slideIndex, setSlideIndex] = useState(
 
   async function submitSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (signupEmailStatus !== "valid") {
+      setError("Use a valid email address from a supported provider.");
+      return;
+    }
     if (!passwordRules.every((rule) => rule.test(password))) { setError("Your password does not meet all the requirements yet."); return; }
     if (password !== confirmPassword) { setError("Those passwords do not match. Please try again."); return; }
     const auth = client(); if (!auth) return;
@@ -900,8 +931,15 @@ const [slideIndex, setSlideIndex] = useState(
                             value={email}
                             onChange={(event) => setEmail(event.target.value)}
                             placeholder="Enter your email"
-                            className={`${signupInputClass} pl-12`}
+                            aria-invalid={signupEmailStatus === "invalid"}
+                            className={`${signupInputClass} pl-12 pr-12`}
                           />
+                          {signupEmailStatus === "valid" && (
+                            <Check aria-label="Supported email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-icon-accent" />
+                          )}
+                          {signupEmailStatus === "invalid" && (
+                            <X aria-label="Unsupported or invalid email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-[#A85757]" />
+                          )}
                         </label>
                         <label className="relative block">
                           <span className="sr-only">Password</span>
@@ -1285,15 +1323,24 @@ const [slideIndex, setSlideIndex] = useState(
                     </label>
                     <label className="grid gap-2 text-base font-semibold">
                       Email
-                      <input
-                        type="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        placeholder="Enter your email"
-                        className={signupInputClass}
-                      />
+                      <span className="relative block">
+                        <input
+                          type="email"
+                          autoComplete="email"
+                          required
+                          value={email}
+                          onChange={(event) => setEmail(event.target.value)}
+                          placeholder="Enter your email"
+                          aria-invalid={signupEmailStatus === "invalid"}
+                          className={`${signupInputClass} pr-12`}
+                        />
+                        {signupEmailStatus === "valid" && (
+                          <Check aria-label="Supported email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-icon-accent" />
+                        )}
+                        {signupEmailStatus === "invalid" && (
+                          <X aria-label="Unsupported or invalid email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-[#A85757]" />
+                        )}
+                      </span>
                     </label>
                     <label className="grid gap-2 text-base font-semibold">
                       Password
