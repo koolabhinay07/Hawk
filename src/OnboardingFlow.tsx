@@ -780,8 +780,10 @@ const [slideIndex, setSlideIndex] = useState(
                       <div className="grid gap-3">
                         <button
                           type="button"
-                          onClick={handleAppleLogin}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          disabled
+                          aria-label="Login with Apple (unavailable until Apple sign-in is configured)"
+                          title="Apple sign-in is not configured yet"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground opacity-50"
                         >
                           <img
                             src={appleIcon}
@@ -1204,8 +1206,10 @@ const [slideIndex, setSlideIndex] = useState(
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <button
                       type="button"
-                      onClick={() => { void signInWithProvider("apple"); }}
-                      className={outlinedButton}
+                      disabled
+                      aria-label="Login with Apple (unavailable until Apple sign-in is configured)"
+                      title="Apple sign-in is not configured yet"
+                      className={`${outlinedButton} cursor-not-allowed opacity-50`}
                     >
                       <img
                         src={appleIcon}
