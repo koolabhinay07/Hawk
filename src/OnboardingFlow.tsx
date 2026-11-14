@@ -5,7 +5,8 @@ import {
   type CSSProperties,
   type FormEvent,
 } from "react";
-import appleIcon from "./assets/apple-icon.svg";
+
+import { supabase } from "./supabase";
 import googleIcon from "./assets/google-icon.svg";
 import {
   ArrowLeft,
@@ -19,6 +20,7 @@ import {
   Mail,
   ShieldCheck,
   UserRound,
+  X,
 } from "lucide-react";
 import onboardingSlideOne from "./assets/onboarding-slide-1.svg";
 import onboardingSlideTwo from "./assets/onboarding-slide-2.svg";
@@ -134,6 +136,31 @@ const passwordRules = [
     test: (value: string) => /[a-z]/.test(value) && /[A-Z]/.test(value),
   },
 ];
+
+const supportedEmailDomains = new Set([
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "icloud.com",
+  "me.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+  "rediffmail.com",
+  "zohomail.in",
+]);
+
+function getSignupEmailStatus(email: string) {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return "empty" as const;
+
+  const match = normalized.match(/^[^\s@]+@([^\s@]+)$/);
+  return match && supportedEmailDomains.has(match[1])
+    ? ("valid" as const)
+    : ("invalid" as const);
+}
 
 function OtpFields({
   value,
@@ -311,16 +338,17 @@ function ShowcasePanel({
 }
 
 export default function OnboardingFlow({
-  onComplete,
+  recovery, onRecoveryComplete,
 }: {
-  onComplete: (profile?: { fullName: string; email: string }) => void;
+  recovery: boolean; onRecoveryComplete: () => void;
 }) {
-  const [screen, setScreen] = useState<FlowScreen>(
-    () => readSavedFlowPosition().screen,
-  );
-  const [slideIndex, setSlideIndex] = useState(
-    () => readSavedFlowPosition().slideIndex,
-  );
+const [screen, setScreen] = useState<FlowScreen>(
+  () => readSavedFlowPosition().screen,
+);
+
+const [slideIndex, setSlideIndex] = useState(
+  () => readSavedFlowPosition().slideIndex,
+);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -332,6 +360,11 @@ export default function OnboardingFlow({
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const signupEmailStatus = getSignupEmailStatus(email);
+
+  const handleGoogleLogin = async () => {
+    await signInWithProvider("google");
+  };
 
   useEffect(() => {
     const initialPosition = { hawkOnboarding: true, screen, slideIndex };
@@ -426,76 +459,77 @@ export default function OnboardingFlow({
   }
 
   function goLogin() {
+    if (recovery) { void supabase?.auth.signOut(); onRecoveryComplete(); }
     setPassword("");
     setConfirmPassword("");
     setVerificationCode("");
     go("login");
   }
 
-  function submitLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    onComplete();
+  function client() {
+    if (!supabase) setError("Authentication is not configured. Contact your administrator.");
+    return supabase;
   }
 
-  function submitSignup(event: FormEvent<HTMLFormElement>) {
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!passwordRules.every((rule) => rule.test(password))) {
-      setError("Your password does not meet all the requirements yet.");
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) setError(error.message);
+  }
+
+  async function signInWithProvider(provider: "google" | "apple") {
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } });
+    if (error) setError(error.message);
+  }
+
+  async function submitSignup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (signupEmailStatus !== "valid") {
+      setError("Use a valid email address from a supported provider.");
       return;
     }
-    if (password !== confirmPassword) {
-      setError("Those passwords do not match. Please try again.");
-      return;
-    }
-    setEmailVerificationCode("");
-    go("email-verify");
+    if (!passwordRules.every((rule) => rule.test(password))) { setError("Your password does not meet all the requirements yet."); return; }
+    if (password !== confirmPassword) { setError("Those passwords do not match. Please try again."); return; }
+    const auth = client(); if (!auth) return;
+    const { data, error } = await auth.auth.signUp({ email: email.trim(), password, options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin } });
+    if (error) { setError(error.message); return; }
+    if (!data.session) { goLogin(); setNotice("Check your email for a confirmation link, then log in."); }
   }
 
   function submitEmailVerification(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (emailVerificationCode.length !== 4) {
-      setError("Enter the 4-character email verification code.");
-      return;
-    }
-    go("email-verified");
+    setError("Use the confirmation link sent to your email.");
   }
 
   function submitInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (inviteCode.length !== 4) {
-      setError("Enter the 4-character code from your school administrator.");
-      return;
-    }
-    onComplete({ fullName: fullName.trim(), email: email.trim() });
+    setError("School invite verification is not configured yet.");
   }
 
-  function submitForgot(event: FormEvent<HTMLFormElement>) {
+  async function submitForgot(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setVerificationCode("");
-    go("forgot-verify");
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin });
+    if (error) { setError(error.message); return; }
+    setNotice("If an account exists, check your email for a password reset link.");
   }
 
   function submitVerification(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (verificationCode.length !== 4) {
-      setError("Enter the 4-character verification code.");
-      return;
-    }
-    setPassword("");
-    setConfirmPassword("");
-    go("reset");
+    setError("Use the password reset link sent to your email.");
   }
 
-  function submitReset(event: FormEvent<HTMLFormElement>) {
+  async function submitReset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (password.length < 8) {
-      setError("Use at least 8 characters for your new password.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Those passwords do not match. Please try again.");
-      return;
-    }
+    if (!passwordRules.every((rule) => rule.test(password))) { setError("Use at least 8 characters, a number, and upper and lower case letters."); return; }
+    if (password !== confirmPassword) { setError("Those passwords do not match. Please try again."); return; }
+    const auth = client(); if (!auth) return;
+    const { error } = await auth.auth.updateUser({ password });
+    if (error) { setError(error.message); return; }
+    await auth.auth.signOut();
+    onRecoveryComplete();
     goLogin();
     setNotice("Your password has been reset. You can now log in.");
   }
@@ -738,24 +772,16 @@ export default function OnboardingFlow({
                           {notice}
                         </p>
                       )}
+                      {error && (
+                        <p role="alert" className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-accent-foreground">
+                          {error}
+                        </p>
+                      )}
                       <div className="grid gap-3">
                         <button
                           type="button"
-                          onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[8px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
-                        >
-                          <img
-                            src={appleIcon}
-                            alt=""
-                            aria-hidden="true"
-                            className="size-5 shrink-0 object-contain"
-                          />
-                          Login with Apple
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onComplete()}
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[8px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+                          onClick={handleGoogleLogin}
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           <img
                             src={googleIcon}
@@ -892,8 +918,15 @@ export default function OnboardingFlow({
                             value={email}
                             onChange={(event) => setEmail(event.target.value)}
                             placeholder="Enter your email"
-                            className={`${signupInputClass} pl-12`}
+                            aria-invalid={signupEmailStatus === "invalid"}
+                            className={`${signupInputClass} pl-12 pr-12`}
                           />
+                          {signupEmailStatus === "valid" && (
+                            <Check aria-label="Supported email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-icon-accent" />
+                          )}
+                          {signupEmailStatus === "invalid" && (
+                            <X aria-label="Unsupported or invalid email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-[#A85757]" />
+                          )}
                         </label>
                         <label className="relative block">
                           <span className="sr-only">Password</span>
@@ -1155,23 +1188,15 @@ export default function OnboardingFlow({
                       {notice}
                     </p>
                   )}
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {error && (
+                    <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-accent-foreground">
+                      {error}
+                    </p>
+                  )}
+                  <div className="mt-6 grid gap-3">
                     <button
                       type="button"
-                      onClick={() => onComplete()}
-                      className={outlinedButton}
-                    >
-                      <img
-                        src={appleIcon}
-                        alt=""
-                        aria-hidden="true"
-                        className="size-5 shrink-0 object-contain"
-                      />
-                      Login with Apple
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onComplete()}
+                      onClick={() => { void signInWithProvider("google"); }}
                       className={`${outlinedButton} w-full`}
                     >
                       <img
@@ -1277,15 +1302,24 @@ export default function OnboardingFlow({
                     </label>
                     <label className="grid gap-2 text-base font-semibold">
                       Email
-                      <input
-                        type="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        placeholder="Enter your email"
-                        className={signupInputClass}
-                      />
+                      <span className="relative block">
+                        <input
+                          type="email"
+                          autoComplete="email"
+                          required
+                          value={email}
+                          onChange={(event) => setEmail(event.target.value)}
+                          placeholder="Enter your email"
+                          aria-invalid={signupEmailStatus === "invalid"}
+                          className={`${signupInputClass} pr-12`}
+                        />
+                        {signupEmailStatus === "valid" && (
+                          <Check aria-label="Supported email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-icon-accent" />
+                        )}
+                        {signupEmailStatus === "invalid" && (
+                          <X aria-label="Unsupported or invalid email address" className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-[#A85757]" />
+                        )}
+                      </span>
                     </label>
                     <label className="grid gap-2 text-base font-semibold">
                       Password
@@ -1598,6 +1632,7 @@ export default function OnboardingFlow({
                         {error}
                       </p>
                     )}
+                    {notice && <p role="status" className="text-sm text-icon-accent">{notice}</p>}
                     <button type="submit" className={`${filledButton} w-full`}>
                       Continue
                       <ArrowRight className="size-4" />
