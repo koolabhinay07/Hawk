@@ -7,7 +7,6 @@ import {
 } from "react";
 
 import { supabase } from "./supabase";
-import appleIcon from "./assets/apple-icon.svg";
 import googleIcon from "./assets/google-icon.svg";
 import {
   ArrowLeft,
@@ -50,6 +49,7 @@ type FlowScreen =
   | "intro"
   | "login"
   | "signup"
+  | "email-otp"
   | "email-verify"
   | "email-verified"
   | "invite"
@@ -61,6 +61,7 @@ const flowScreens: FlowScreen[] = [
   "intro",
   "login",
   "signup",
+  "email-otp",
   "email-verify",
   "email-verified",
   "invite",
@@ -357,6 +358,7 @@ const [slideIndex, setSlideIndex] = useState(
   const [inviteCode, setInviteCode] = useState("");
   const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -477,6 +479,36 @@ const [slideIndex, setSlideIndex] = useState(
     const auth = client(); if (!auth) return;
     const { error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
     if (error) setError(error.message);
+  }
+
+  async function requestEmailOtp() {
+    const auth = client(); if (!auth) return;
+    setError("");
+    setNotice("");
+    if (!email.trim()) { setError("Enter your email address first."); return; }
+    const { error } = await auth.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
+    if (error) { setError(error.message); return; }
+    setEmailOtp("");
+    go("email-otp");
+    setNotice(`A sign-in code was sent to ${email.trim()}.`);
+  }
+
+  async function verifyEmailOtp(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const auth = client(); if (!auth) return;
+    setError("");
+    const { error } = await auth.auth.verifyOtp({ email: email.trim(), token: emailOtp.trim(), type: "email" });
+    if (error) setError(error.message);
+  }
+
+  async function resendEmailOtp() {
+    const auth = client(); if (!auth) return;
+    setError("");
+    setNotice("");
+    const { error } = await auth.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
+    if (error) { setError(error.message); return; }
+    setEmailOtp("");
+    setNotice(`A new sign-in code was sent to ${email.trim()}.`);
   }
 
   async function signInWithProvider(provider: "google" | "apple") {
@@ -773,21 +805,20 @@ const [slideIndex, setSlideIndex] = useState(
                           {notice}
                         </p>
                       )}
+                      {error && (
+                        <p role="alert" className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-accent-foreground">
+                          {error}
+                        </p>
+                      )}
                       <div className="grid gap-3">
                         <button
                           type="button"
-                          disabled
-                          aria-label="Login with Apple (unavailable until Apple sign-in is configured)"
-                          title="Apple sign-in is not configured yet"
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-muted px-4 text-base font-semibold text-muted-foreground opacity-70"
+                          onClick={() => { void requestEmailOtp(); }}
+                          aria-label="Login with SSO using email code"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                         >
-                          <img
-                            src={appleIcon}
-                            alt=""
-                            aria-hidden="true"
-                            className="size-5 shrink-0 object-contain"
-                          />
-                          Login with Apple
+                          <ShieldCheck aria-hidden="true" className="size-5 shrink-0" />
+                          Login with SSO
                         </button>
                         <button
                           type="button"
@@ -1199,21 +1230,20 @@ const [slideIndex, setSlideIndex] = useState(
                       {notice}
                     </p>
                   )}
+                  {error && (
+                    <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-accent-foreground">
+                      {error}
+                    </p>
+                  )}
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <button
                       type="button"
-                      disabled
-                      aria-label="Login with Apple (unavailable until Apple sign-in is configured)"
-                      title="Apple sign-in is not configured yet"
-                      className={`${outlinedButton} cursor-not-allowed border-border bg-muted text-muted-foreground opacity-70`}
+                      onClick={() => { void requestEmailOtp(); }}
+                      aria-label="Login with SSO using email code"
+                      className={`${outlinedButton} w-full`}
                     >
-                      <img
-                        src={appleIcon}
-                        alt=""
-                        aria-hidden="true"
-                        className="size-5 shrink-0 object-contain"
-                      />
-                      Login with Apple
+                      <ShieldCheck aria-hidden="true" className="size-5 shrink-0" />
+                      Login with SSO
                     </button>
                     <button
                       type="button"
@@ -1460,6 +1490,61 @@ const [slideIndex, setSlideIndex] = useState(
                     </span>
                     .
                   </p>
+                </div>
+              )}
+
+              {screen === "email-otp" && (
+                <div className="-translate-y-4">
+                  <span className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-primary-soft text-icon-accent">
+                    <Mail className="size-10" />
+                  </span>
+                  <p className="mb-2 text-sm font-semibold text-icon-accent">
+                    Passwordless sign in
+                  </p>
+                  <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">
+                    Enter your sign-in code
+                  </h1>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    We sent a 6-digit code to{" "}
+                    <span className="font-semibold text-foreground">{email}</span>.
+                  </p>
+                  <form className="mt-7 grid gap-5" onSubmit={verifyEmailOtp}>
+                    <label className="grid gap-2 text-sm font-semibold">
+                      6-digit code
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        required
+                        value={emailOtp}
+                        onChange={(event) => setEmailOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="Enter the code"
+                        className={`${inputClass} text-center text-2xl tracking-[0.4em]`}
+                      />
+                    </label>
+                    {error && (
+                      <p role="alert" className="text-center text-sm text-accent-foreground">
+                        {error}
+                      </p>
+                    )}
+                    {notice && (
+                      <p role="status" className="text-center text-sm text-icon-accent">
+                        {notice}
+                      </p>
+                    )}
+                    <button type="submit" disabled={emailOtp.length !== 6} className={`${filledButton} w-full`}>
+                      Verify and log in
+                      <ArrowRight className="size-4" />
+                    </button>
+                    <button type="button" onClick={() => { void resendEmailOtp(); }} className="min-h-9 text-sm font-semibold text-icon-accent hover:underline">
+                      Resend code
+                    </button>
+                    <button type="button" onClick={goLogin} className={`${outlinedButton} w-full`}>
+                      Back to Login
+                    </button>
+                  </form>
                 </div>
               )}
 
