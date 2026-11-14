@@ -367,10 +367,6 @@ const [slideIndex, setSlideIndex] = useState(
     await signInWithProvider("google");
   };
 
-  const handleAppleLogin = async () => {
-    await signInWithProvider("apple");
-  };
-
   useEffect(() => {
     const initialPosition = { hawkOnboarding: true, screen, slideIndex };
     if (window.history.state?.hawkOnboarding !== true) {
