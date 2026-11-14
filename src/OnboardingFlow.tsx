@@ -779,7 +779,7 @@ const [slideIndex, setSlideIndex] = useState(
                           disabled
                           aria-label="Login with Apple (unavailable until Apple sign-in is configured)"
                           title="Apple sign-in is not configured yet"
-                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-card px-4 text-base font-semibold text-foreground opacity-50"
+                          className="inline-flex h-[60px] min-h-[60px] shrink-0 w-full items-center justify-center gap-3 rounded-[28px] border border-border bg-muted px-4 text-base font-semibold text-muted-foreground opacity-70"
                         >
                           <img
                             src={appleIcon}
@@ -1205,7 +1205,7 @@ const [slideIndex, setSlideIndex] = useState(
                       disabled
                       aria-label="Login with Apple (unavailable until Apple sign-in is configured)"
                       title="Apple sign-in is not configured yet"
-                      className={`${outlinedButton} cursor-not-allowed opacity-50`}
+                      className={`${outlinedButton} cursor-not-allowed border-border bg-muted text-muted-foreground opacity-70`}
                     >
                       <img
                         src={appleIcon}
